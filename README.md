@@ -18,7 +18,11 @@
     - newsletter management
     - subscription management
     - email functionality
-    - api documentation
+    - api documentation - swagger
+    - healthcheck
+    - graceful shutdown WIP
+    - logs
+    - panic recovery
     - security
       - rate limiting ????
       - cors
