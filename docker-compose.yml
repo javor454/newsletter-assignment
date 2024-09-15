@@ -1,0 +1,79 @@
+---
+version: "3.7"
+
+networks:
+    default:
+
+services:
+    newsletter-assignment:
+        container_name: newsletter-assignment
+        init: true
+        build:
+            context: .
+            target: development
+            args:
+                PROJECT_ROOT: "/go/src/newsletter-assignment"
+        restart: unless-stopped
+        depends_on:
+            postgres:
+                condition: service_healthy
+        environment:
+            CONFIG_HTTP_PORT: 8080
+            CONFIG_APP_ENV: dev
+            CONFIG_APP_NAME: newsletter-assignment
+            CONFIG_CORS_ALLOWED_ORIGINS: http://localhost
+            CONFIG_CORS_ALLOWED_HEADERS: x-platform;authorization;content-type;x-request-uuid;x-app-id;x-app-build;x-api-key
+            CONFIG_CORS_EXPOSED_HEADERS: location
+            CONFIG_TIMEZONE: Europe/Prague
+
+            # Logger config
+            CONFIG_LOG_LEVEL: debug
+            CONFIG_LOG_DEVEL_MODE: 1
+
+            # Prometheus config
+            CONFIG_PROMETHEUS_SUBSYSTEM: newsletter-assignment
+
+            # Postgres config
+            CONFIG_DATABASE_HOST: postgres
+            CONFIG_DATABASE_PORT: 5432
+            CONFIG_DATABASE_USER: newsletter-assignment
+            CONFIG_DATABASE_PASSWORD: pwd
+            CONFIG_DATABASE_DB: newsletter-assignment
+            CONFIG_DATABASE_POOL_MAX_CONN_LIFETIME: 50s
+            CONFIG_DATABASE_POOL_MAX_CONN_IDLE_TIME: 50s
+            CONFIG_DATABASE_QUERY_TIMEOUT: 30s
+            CONFIG_DATABASE_POOL_MAX_CONNS: 100
+            CONFIG_DATABASE_POOL_MIN_CONNS: 1
+            CONFIG_DATABASE_POOL_HEALTH_CHECK_PERIOD: 5s
+
+        healthcheck:
+            test: ["CMD-SHELL", "curl -f http://localhost:8080/health/readiness || exit 1"]
+            interval: 15s
+            timeout: 10s
+            retries: 3
+        ports:
+            - "8080:8080"
+        volumes:
+            - "./auth:/go/src/newsletter-assignment/:cached"
+
+    postgres:
+        container_name: postgres
+        image: "postgres:16-alpine"
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: newsletter-assignment
+            POSTGRES_USER: newsletter-assignment
+            POSTGRES_PASSWORD: pwd
+            PGDATA: /var/lib/postgresql/data/pgdata
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U newsletter-assignment -d newsletter-assignment"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    postgres_data:

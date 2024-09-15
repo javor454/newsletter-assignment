@@ -3,12 +3,20 @@ package main
 import (
 	"fmt"
 
-	"github.com/javor454/newsletter-assignment/auth/internal"
-	"github.com/javor454/newsletter-assignment/pkg/http-server"
-	"github.com/javor454/newsletter-assignment/pkg/shutdown"
+	"github.com/javor454/newsletter-assignment/app/config"
+	"github.com/javor454/newsletter-assignment/app/http-server"
+	"github.com/javor454/newsletter-assignment/app/shutdown"
+	"github.com/javor454/newsletter-assignment/internal"
+	"github.com/spf13/viper"
 )
 
 func main() {
+	viper.AutomaticEnv()
+	appConfig, err := config.CreateAppConfig()
+	if err != nil {
+		panic(err)
+	}
+
 	shutdownHandler := shutdown.NewHandler()
 	rootCtx := shutdownHandler.CreateRootContextWithShutdown()
 
@@ -16,7 +24,7 @@ func main() {
 
 	internal.Register()
 
-	ginErrChan := httpServer.RunGinServer()
+	ginErrChan := httpServer.RunGinServer(appConfig.HttpPort)
 
 	select {
 	case err := <-ginErrChan:

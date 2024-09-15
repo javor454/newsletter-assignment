@@ -1,1 +1,4 @@
 .idea
+postgres_data/*
+**/build/*
+tmp

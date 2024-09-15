@@ -42,7 +42,7 @@ func (s *HttpServer) GracefulShutdown() error {
 	return nil
 }
 
-func (s *HttpServer) RunGinServer() chan error {
+func (s *HttpServer) RunGinServer(port int) chan error {
 	errChan := make(chan error, 1)
 
 	// TODO: register in module
@@ -56,7 +56,7 @@ func (s *HttpServer) RunGinServer() chan error {
 	}
 
 	s.srv = &http.Server{
-		Addr:         ":8080",
+		Addr:         fmt.Sprintf(":%d", port),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		Handler:      s.engine.Handler(),

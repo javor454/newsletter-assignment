@@ -43,7 +43,8 @@
     - architecture decisions?
     - future improvements?
 - EXTRA
-  - basic performance test 
+  - basic performance test
+  - air hot rebuild in local env
   - CI (github actions lint / build / deploy)
   - simple backoffice
   - graphql
