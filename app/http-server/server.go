@@ -8,15 +8,17 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/javor454/newsletter-assignment/app/logger"
 )
 
 type HttpServer struct {
 	engine          *gin.Engine
+	lg              logger.Logger
 	srv             *http.Server
 	shutdownTimeout time.Duration
 }
 
-func NewHttpServer() *HttpServer {
+func NewHttpServer(lg logger.Logger) *HttpServer {
 	// gin.SetMode(gin.ReleaseMode) PROD MODE?
 	ge := gin.New()
 	// TODO: cors
@@ -24,6 +26,7 @@ func NewHttpServer() *HttpServer {
 
 	return &HttpServer{
 		engine: ge,
+		lg:     lg,
 	}
 }
 
@@ -45,14 +48,8 @@ func (s *HttpServer) GracefulShutdown() error {
 func (s *HttpServer) RunGinServer(port int) chan error {
 	errChan := make(chan error, 1)
 
-	// TODO: register in module
-	s.engine.GET("/", func(c *gin.Context) {
-		fmt.Println("Ping")
-		c.String(http.StatusOK, "Welcome Gin Server")
-	})
-
 	for _, v := range s.engine.Routes() {
-		fmt.Printf("[GIN] Route: %s %s initialized.\n", v.Method, v.Path)
+		s.lg.Debugf("[GIN] Route: %s %s initialized.\n", v.Method, v.Path)
 	}
 
 	s.srv = &http.Server{
@@ -65,9 +62,13 @@ func (s *HttpServer) RunGinServer(port int) chan error {
 	go func() {
 		// don't block startup with server init
 		if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errChan <- fmt.Errorf("[GIN] Server error: %w", err)
+			errChan <- fmt.Errorf("[GIN] Server error: %s", err.Error())
 		}
 	}()
 
 	return errChan
+}
+
+func (s *HttpServer) GetEngine() *gin.Engine {
+	return s.engine
 }

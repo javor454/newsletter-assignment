@@ -4,6 +4,9 @@ version: "3.7"
 networks:
     default:
 
+volumes:
+    postgres_data:
+
 services:
     newsletter-assignment:
         container_name: newsletter-assignment
@@ -34,17 +37,17 @@ services:
             CONFIG_PROMETHEUS_SUBSYSTEM: newsletter-assignment
 
             # Postgres config
-            CONFIG_DATABASE_HOST: postgres
-            CONFIG_DATABASE_PORT: 5432
-            CONFIG_DATABASE_USER: newsletter-assignment
-            CONFIG_DATABASE_PASSWORD: pwd
-            CONFIG_DATABASE_DB: newsletter-assignment
-            CONFIG_DATABASE_POOL_MAX_CONN_LIFETIME: 50s
-            CONFIG_DATABASE_POOL_MAX_CONN_IDLE_TIME: 50s
-            CONFIG_DATABASE_QUERY_TIMEOUT: 30s
-            CONFIG_DATABASE_POOL_MAX_CONNS: 100
-            CONFIG_DATABASE_POOL_MIN_CONNS: 1
-            CONFIG_DATABASE_POOL_HEALTH_CHECK_PERIOD: 5s
+            CONFIG_POSTGRES_USER: newsletter-assignment
+            CONFIG_POSTGRES_PASSWORD: pwd
+            CONFIG_POSTGRES_DB: newsletter-assignment
+            CONFIG_POSTGRES_HOST: postgres
+            CONFIG_POSTGRES_PORT: 5432
+            CONFIG_POSTGRES_POOL_MAX_CONN_LIFETIME: 50s
+            CONFIG_POSTGRES_POOL_MAX_CONN_IDLE_TIME: 50s
+            CONFIG_POSTGRES_QUERY_TIMEOUT: 30s
+            CONFIG_POSTGRES_POOL_MAX_CONNS: 100
+            CONFIG_POSTGRES_POOL_MIN_CONNS: 1
+            CONFIG_POSTGRES_POOL_HEALTH_CHECK_PERIOD: 5s
 
         healthcheck:
             test: ["CMD-SHELL", "curl -f http://localhost:8080/health/readiness || exit 1"]
@@ -54,7 +57,7 @@ services:
         ports:
             - "8080:8080"
         volumes:
-            - "./auth:/go/src/newsletter-assignment/:cached"
+            - ".:/go/src/newsletter-assignment/:cached"
 
     postgres:
         container_name: postgres
@@ -66,7 +69,7 @@ services:
             POSTGRES_PASSWORD: pwd
             PGDATA: /var/lib/postgresql/data/pgdata
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - postgres_data:/var/lib/postgresql/data/pgdata
         ports:
             - "5432:5432"
         healthcheck:
@@ -75,5 +78,25 @@ services:
             timeout: 5s
             retries: 5
 
-volumes:
-    postgres_data:
+    firebase-emulators:
+        container_name: firebase
+        build:
+            context: ./firebase
+        ports:
+            - "9000:9000"  # Realtime Database emulator
+            - "9099:9099"  # Auth emulator
+            - "4400:4400"  # Hub
+        volumes:
+            - ./firebase/firebase.json:/firebase/firebase.json
+            - ./firebase/database.rules.json:/firebase/database.rules.json
+            - ./firebase/firebase-data:/firebase/firebase-data
+        environment:
+            - FIREBASE_DATABASE_EMULATOR_HOST=0.0.0.0:9000
+            - FIREBASE_AUTH_EMULATOR_HOST=0.0.0.0:9099
+            - FIREBASE_TOKEN=dummy-token
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000/.json"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s

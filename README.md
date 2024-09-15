@@ -1,14 +1,16 @@
 # Newsletter assignment
 
 ## Development plan
-- Setup project via docker compose
-  - go app
-  - postgre
+- Setup project via docker compose ✅
+  - go app ✅
+  - postgre ✅
+- air hot rebuild in local env ✅
 - Setup other dependencies ??????
   - firebase 
     - setup project and configure SDK
   - email server
     - SendGrid or AWS SES
+- db migrations
 - MVP go app
   - REST
     - user registration
@@ -44,25 +46,9 @@
     - future improvements?
 - EXTRA
   - basic performance test
-  - air hot rebuild in local env
   - CI (github actions lint / build / deploy)
   - simple backoffice
   - graphql
-
-## Architecture
-- auth component
-  - functions
-    - registration
-    - authorization
-    - authentication
-  - requirements
-    - 100 users
-- news component
-  - functions
-    - newsletter management
-    - subscription management
-    - email management
-  - requirements
 
 ## Data layer
 - pagination

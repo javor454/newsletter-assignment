@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./../../build/newsletter-assignment"
+  bin = "./../build/newsletter-assignment"
   cmd = "./script/build.sh"
   delay = 300
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "postgres_data"]
@@ -13,7 +13,7 @@ tmp_dir = "tmp"
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""
-  include_dir = ["cmd", "pkg"]
+  include_dir = ["app", "internal"]
   include_file = ["main.go"]
   include_ext = ["go", "tpl", "tmpl", "html"]
   kill_delay = "10s"

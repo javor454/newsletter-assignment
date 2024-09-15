@@ -18,21 +18,21 @@ ENV CGO_ENABLED=1 \
 
 WORKDIR ${PROJECT_ROOT}
 
-RUN ls -lai
 COPY go.sum .
 COPY go.mod .
 
 RUN go mod download
 RUN go mod tidy
 
-COPY auth .
+COPY . .
 
 ##### development ##############################################################
 FROM base as development
 
-RUN ./script/build.sh
+RUN curl -sSfL "https://raw.githubusercontent.com/cosmtrek/air/master/install.sh" | sh -s -- -b "$(go env GOPATH)/bin"
 
-CMD ["sh", "-c", "${PROJECT_ROOT}/../build/newsletter-assignment"]
+CMD ["/bin/sh", "-c", "air"]
+#CMD ["sh", "-c", "${PROJECT_ROOT}/../build/newsletter-assignment"]
 ##### build ###########+#########################################################
 FROM base as build
 RUN bash script/build.sh

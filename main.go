@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/javor454/newsletter-assignment/app/config"
 	"github.com/javor454/newsletter-assignment/app/http-server"
+	"github.com/javor454/newsletter-assignment/app/logger"
+	"github.com/javor454/newsletter-assignment/app/pg"
 	"github.com/javor454/newsletter-assignment/app/shutdown"
 	"github.com/javor454/newsletter-assignment/internal"
 	"github.com/spf13/viper"
@@ -16,25 +18,54 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	pgConfig, err := config.CreatePostgresConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	lg := logger.NewLogger(appConfig)
+
+	lg.Debug("[PG] Connecting...")
+	pgConn, err := pg.NewConnection(pgConfig)
+	if err != nil {
+		lg.Fatal(err)
+	}
+	lg.Info("[PG] Connected")
+
+	lg.Debug("[MIGRATIONS] Starting up...")
+	if err := pg.MigrationsUp(pgConn); err != nil {
+		log.Fatal(err)
+	}
+	lg.Info("[MIGRATIONS] Done")
 
 	shutdownHandler := shutdown.NewHandler()
+
+	lg.Debug("Creating root context")
 	rootCtx := shutdownHandler.CreateRootContextWithShutdown()
 
-	httpServer := http_server.NewHttpServer()
+	lg.Debug("[HTTP] Creating server...")
+	httpServer := http_server.NewHttpServer(lg)
+	lg.Debug("[HTTP] Server created")
 
-	internal.Register()
+	internal.RegisterDependencies(httpServer, lg)
 
+	lg.Debug("[HTTP] Running server...")
 	ginErrChan := httpServer.RunGinServer(appConfig.HttpPort)
+	lg.Info("[HTTP] Server running...")
 
 	select {
 	case err := <-ginErrChan:
-		fmt.Printf("[GIN] Server error: %s\n", err.Error())
+		lg.Errorf("[HTTP] Server error: %s\n", err.Error())
 		shutdownHandler.SignalShutdown()
 	case <-rootCtx.Done():
+		lg.Info("Received signal, shutting down with grace...")
 		if err := httpServer.GracefulShutdown(); err != nil {
-			fmt.Printf("[GIN] Shutdown error: %s\n", err.Error())
+			lg.WithError(err).Fatalf("[HTTP] Shutdown error.")
+		}
+		if err := pgConn.Close(); err != nil {
+			lg.WithError(err).Fatalf("[PG] Shutdown error.")
 		}
 
-		fmt.Println("Graceful shutdown done")
+		lg.Info("Graceful shutdown done")
 	}
 }
