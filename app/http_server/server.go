@@ -11,26 +11,26 @@ import (
 	"github.com/javor454/newsletter-assignment/app/logger"
 )
 
-type HttpServer struct {
+type Server struct {
 	engine          *gin.Engine
 	lg              logger.Logger
 	srv             *http.Server
 	shutdownTimeout time.Duration
 }
 
-func NewHttpServer(lg logger.Logger) *HttpServer {
+func NewServer(lg logger.Logger) *Server {
 	// gin.SetMode(gin.ReleaseMode) PROD MODE?
 	ge := gin.New()
 	// TODO: cors
 	// TODO: panic
 
-	return &HttpServer{
+	return &Server{
 		engine: ge,
 		lg:     lg,
 	}
 }
 
-func (s *HttpServer) GracefulShutdown() error {
+func (s *Server) GracefulShutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 	defer cancel()
 
@@ -45,7 +45,7 @@ func (s *HttpServer) GracefulShutdown() error {
 	return nil
 }
 
-func (s *HttpServer) RunGinServer(port int) chan error {
+func (s *Server) RunGinServer(port int) chan error {
 	errChan := make(chan error, 1)
 
 	for _, v := range s.engine.Routes() {
@@ -69,6 +69,6 @@ func (s *HttpServer) RunGinServer(port int) chan error {
 	return errChan
 }
 
-func (s *HttpServer) GetEngine() *gin.Engine {
+func (s *Server) GetEngine() *gin.Engine {
 	return s.engine
 }

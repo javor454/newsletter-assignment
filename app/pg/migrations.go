@@ -23,10 +23,8 @@ func MigrationsUp(pgConn *sql.DB) error {
 		return fmt.Errorf("failed to get current working directory: %s", err.Error())
 	}
 
-	// Construct the absolute path to the migrations directory
 	migrationsPath := filepath.Join(cwd, "migrations")
 
-	// Check if the migrations directory exists
 	if _, err := os.Stat(migrationsPath); os.IsNotExist(err) {
 		return fmt.Errorf("migrations directory does not exist: %s", migrationsPath)
 	}

@@ -1,14 +1,19 @@
 package operation
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+	"fmt"
+)
 
 type CreateUser struct {
 	pgConn *sql.DB
 }
 
 type CreateUserParams struct {
+	ID           string
 	Email        string
-	PasswordHash stringa
+	PasswordHash string
 }
 
 func NewCreateUser(pgConn *sql.DB) *CreateUser {
@@ -17,10 +22,16 @@ func NewCreateUser(pgConn *sql.DB) *CreateUser {
 	}
 }
 
-func (o *CreateUser) Execute(p *CreateUserParams) {
+// TODO: test duplicit save
+func (o *CreateUser) Execute(ctx context.Context, p *CreateUserParams) error {
 	const query = `
-		INSERT INTO users (email, password_hash)
-		VALUES ($1, $2);
+		INSERT INTO users (id, email, password_hash)
+		VALUES ($1, $2, $3);
 	`
-	o.pgConn.QueryRow(query)
+	_, err := o.pgConn.ExecContext(ctx, query, p.ID, p.Email, p.PasswordHash)
+	if err != nil {
+		return fmt.Errorf("failed to create user: %s", err.Error())
+	}
+
+	return nil
 }

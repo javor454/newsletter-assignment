@@ -7,17 +7,19 @@ import (
 	"github.com/javor454/newsletter-assignment/internal/domain"
 )
 
-type UserService interface {
-	RegisterUser(ctx context.Context, user *domain.User) error
+type RegisterUser interface {
+	Register(ctx context.Context, user *domain.User) error
 }
 
 type RegisterUserHandler struct {
-	us UserService
+	registerUser  RegisterUser
+	generateToken GenerateToken
 }
 
-func NewRegisterUserHandler(us UserService) *RegisterUserHandler {
+func NewRegisterUserHandler(us RegisterUser, ts GenerateToken) *RegisterUserHandler {
 	return &RegisterUserHandler{
-		us: us,
+		registerUser:  us,
+		generateToken: ts,
 	}
 }
 
@@ -32,11 +34,14 @@ func (r *RegisterUserHandler) Handle(ctx context.Context, email string, password
 	}
 
 	user := domain.NewUser(emailVo, pass)
-	if err := r.us.RegisterUser(ctx, user); err != nil {
+	if err := r.registerUser.Register(ctx, user); err != nil {
 		return nil, err
 	}
 
-	// TODO: create token
+	token, err := r.generateToken.Generate(user)
+	if err != nil {
+		return nil, err
+	}
 
-	return &dto.Token{}, nil
+	return token, nil
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/javor454/newsletter-assignment/app/http-server"
+	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/internal/application/dto"
 	"github.com/javor454/newsletter-assignment/internal/ui/http/request"
@@ -28,23 +28,23 @@ type UserController struct {
 
 func NewUserController(
 	lg logger.Logger,
-	httpServer *http_server.HttpServer,
+	httpServer *http_server.Server,
 	ruh RegisterUserHandler,
 	luh LoginUserHandler,
 ) *UserController {
-	u := &UserController{
+	controller := &UserController{
 		ruh: ruh,
 		luh: luh,
 		lg:  lg,
 	}
 
-	httpServer.GetEngine().POST("api/users/register", u.RegisterUser)
-	httpServer.GetEngine().POST("api/users/login", u.LoginUser)
+	httpServer.GetEngine().POST("api/v1/users/register", controller.Register)
+	httpServer.GetEngine().POST("api/v1/users/login", controller.Login)
 
-	return u
+	return controller
 }
 
-func (u *UserController) RegisterUser(ctx *gin.Context) {
+func (u *UserController) Register(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {
 		u.lg.WithError(err).Error("Failed to bind headers")
@@ -79,7 +79,7 @@ func (u *UserController) RegisterUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{})
 }
 
-func (u *UserController) LoginUser(ctx *gin.Context) {
+func (u *UserController) Login(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {
 		u.lg.WithError(err).Error("Failed to bind headers")

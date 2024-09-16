@@ -1,22 +1,28 @@
 package domain
 
-import "github.com/google/uuid"
-
 type User struct {
-	id       uuid.UUID
+	id       *ID
 	email    *Email
 	password *Password
 }
 
 func NewUser(email *Email, password *Password) *User {
 	return &User{
-		id:       uuid.New(),
+		id:       NewID(),
 		email:    email,
 		password: password,
 	}
 }
 
-func (u *User) Id() uuid.UUID {
+func CreateUserFromExisting(id *ID, email *Email, password *Password) *User {
+	return &User{
+		id:       id,
+		email:    email,
+		password: password,
+	}
+}
+
+func (u *User) Id() *ID {
 	return u.id
 }
 

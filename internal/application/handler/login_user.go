@@ -2,17 +2,26 @@ package handler
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/javor454/newsletter-assignment/internal/application/dto"
 	"github.com/javor454/newsletter-assignment/internal/domain"
 )
 
-type LoginUserHandler struct {
+type GetUser interface {
+	GetByEmailAndPassword(ctx context.Context, email *domain.Email, pass *domain.Password) (*domain.User, error)
 }
 
-func NewLoginUserHandler() *LoginUserHandler {
-	return &LoginUserHandler{}
+type GenerateToken interface {
+	Generate(user *domain.User) (*dto.Token, error)
+}
+
+type LoginUserHandler struct {
+	getUser       GetUser
+	generateToken GenerateToken
+}
+
+func NewLoginUserHandler(ur GetUser, ts GenerateToken) *LoginUserHandler {
+	return &LoginUserHandler{getUser: ur, generateToken: ts}
 }
 
 func (r *LoginUserHandler) Handle(ctx context.Context, email string, password string) (*dto.Token, error) {
@@ -25,16 +34,15 @@ func (r *LoginUserHandler) Handle(ctx context.Context, email string, password st
 		return nil, err
 	}
 
-	// TODO: retrieve email from db and compare
-	if emailVo.String() != "email from db" {
-		return nil, fmt.Errorf("invalid email")
+	user, err := r.getUser.GetByEmailAndPassword(ctx, emailVo, pass)
+	if err != nil {
+		return nil, err
 	}
 
-	// TODO: retrieve hash from db
-	if !pass.IsEqual("hash from db") {
-		return nil, fmt.Errorf("invalid password")
+	token, err := r.generateToken.Generate(user)
+	if err != nil {
+		return nil, err
 	}
 
-	// TODO: create token
-	return &dto.Token{}, nil
+	return token, nil
 }

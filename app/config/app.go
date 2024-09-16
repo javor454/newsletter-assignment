@@ -6,13 +6,15 @@ import (
 )
 
 const (
-	envHttpPort = "CONFIG_HTTP_PORT"
-	envLogLevel = "CONFIG_LOG_LEVEL"
+	envHttpPort  = "CONFIG_HTTP_PORT"
+	envLogLevel  = "CONFIG_LOG_LEVEL"
+	envJwtSecret = "CONFIG_JWT_SECRET"
 )
 
 type AppConfig struct {
-	HttpPort int
-	LogLevel logrus.Level
+	HttpPort  int
+	LogLevel  logrus.Level
+	JwtSecret string
 }
 
 func CreateAppConfig() (*AppConfig, error) {
@@ -28,9 +30,14 @@ func CreateAppConfig() (*AppConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	jwtSecret := viper.GetString(envJwtSecret)
+	if jwtSecret == "" {
+		return nil, getMissingError(envJwtSecret)
+	}
 
 	return &AppConfig{
-		HttpPort: httpPort,
-		LogLevel: lvl,
+		HttpPort:  httpPort,
+		LogLevel:  lvl,
+		JwtSecret: jwtSecret,
 	}, nil
 }

@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/javor454/newsletter-assignment/app/config"
-	"github.com/javor454/newsletter-assignment/app/http-server"
+	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/app/pg"
 	"github.com/javor454/newsletter-assignment/app/shutdown"
@@ -44,10 +44,10 @@ func main() {
 	rootCtx := shutdownHandler.CreateRootContextWithShutdown()
 
 	lg.Debug("[HTTP] Creating server...")
-	httpServer := http_server.NewHttpServer(lg)
+	httpServer := http_server.NewServer(lg)
 	lg.Debug("[HTTP] Server created")
 
-	internal.RegisterDependencies(httpServer, lg)
+	internal.RegisterDependencies(httpServer, lg, pgConn, appConfig)
 
 	lg.Debug("[HTTP] Running server...")
 	ginErrChan := httpServer.RunGinServer(appConfig.HttpPort)
