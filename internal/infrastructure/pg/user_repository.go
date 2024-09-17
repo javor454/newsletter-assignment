@@ -2,9 +2,9 @@ package pg
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/javor454/newsletter-assignment/internal/application"
 	"github.com/javor454/newsletter-assignment/internal/domain"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/crypt"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg/operation"
@@ -29,7 +29,7 @@ func (u *UserRepository) Register(ctx context.Context, user *domain.User) error 
 	}
 
 	p := &operation.CreateUserParams{
-		ID:           user.Id().String(),
+		ID:           user.ID().String(),
 		Email:        user.Email().String(),
 		PasswordHash: bcryptHash.String(),
 	}
@@ -44,7 +44,11 @@ func (u *UserRepository) Register(ctx context.Context, user *domain.User) error 
 	return nil
 }
 
-func (u *UserRepository) GetByEmailAndPassword(ctx context.Context, email *domain.Email, pass *domain.Password) (*domain.User, error) {
+func (u *UserRepository) GetByEmailAndPassword(
+	ctx context.Context,
+	email *domain.Email,
+	pass *domain.Password,
+) (*domain.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
@@ -56,8 +60,7 @@ func (u *UserRepository) GetByEmailAndPassword(ctx context.Context, email *domai
 	id := domain.CreateIDFromExisting(res.ID)
 	bcryptHash := crypt.CreateHashFromExisting(res.PasswordHash)
 	if !bcryptHash.IsEqual(pass) {
-		// TODO: custom error
-		return nil, fmt.Errorf("invalid password")
+		return nil, application.InvalidPasswordError
 	}
 
 	return domain.CreateUserFromExisting(id, email, pass), nil

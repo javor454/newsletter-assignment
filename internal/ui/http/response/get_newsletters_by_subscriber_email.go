@@ -6,17 +6,15 @@ import (
 	"github.com/javor454/newsletter-assignment/internal/domain"
 )
 
-type GetNewslettersByUserIDResponse struct {
-	ID          string  `json:"id"`
+type GetNewslettersBySubscriberEmailResponse struct {
 	PublicID    string  `json:"public_id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
 	CreatedAt   string  `json:"created_at"`
 }
 
-func CreateGetNewslettersByUserIDResponseFromEntity(n *domain.Newsletter) GetNewslettersByUserIDResponse {
-	return GetNewslettersByUserIDResponse{
-		ID:          n.ID().String(),
+func CreateGetNewslettersBySubscriberEmailResponseFromEntity(n *domain.Newsletter) GetNewslettersBySubscriberEmailResponse {
+	return GetNewslettersBySubscriberEmailResponse{
 		PublicID:    n.PublicID().String(),
 		Name:        n.Name(),
 		Description: n.Description(),

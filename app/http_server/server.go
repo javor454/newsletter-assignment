@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/javor454/newsletter-assignment/app/config"
 	"github.com/javor454/newsletter-assignment/app/logger"
 )
 
@@ -18,11 +20,19 @@ type Server struct {
 	shutdownTimeout time.Duration
 }
 
-func NewServer(lg logger.Logger) *Server {
-	// gin.SetMode(gin.ReleaseMode) PROD MODE?
+func NewServer(lg logger.Logger, cfg *config.AppConfig) *Server {
+	gin.SetMode(gin.DebugMode) // TODO: PROD MODE?
 	ge := gin.New()
-	// TODO: cors
-	// TODO: panic
+
+	cf := cors.DefaultConfig()
+	cf.AllowOrigins = cfg.CorsAllowedOrigins
+	cf.AllowMethods = []string{"GET", "POST"}
+	cf.AllowHeaders = cfg.CorsAllowedHeaders
+	cf.AllowCredentials = true
+	cf.MaxAge = 12 * time.Hour
+	ge.Use(cors.New(cf))
+
+	// TODO: panic middleware
 
 	return &Server{
 		engine: ge,

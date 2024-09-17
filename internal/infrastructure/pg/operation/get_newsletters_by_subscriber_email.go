@@ -1,0 +1,80 @@
+package operation
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"math"
+
+	"github.com/javor454/newsletter-assignment/internal/application/dto"
+	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg/row"
+)
+
+type GetNewslettersBySubscriberEmail struct {
+	pgConn *sql.DB
+}
+
+type GetNewslettersBySubscriberEmailParams struct {
+	Email      string
+	PageSize   int
+	PageNumber int
+}
+
+func NewGetNewslettersBySubscriberEmail(pgConn *sql.DB) *GetNewslettersBySubscriberEmail {
+	return &GetNewslettersBySubscriberEmail{
+		pgConn: pgConn,
+	}
+}
+
+func (o *GetNewslettersBySubscriberEmail) Execute(
+	ctx context.Context,
+	p *GetNewslettersBySubscriberEmailParams,
+) ([]*row.Newsletter, *dto.Pagination, error) {
+	const countQuery = `
+        SELECT COUNT(*) as c
+        FROM subscriptions s JOIN newsletters n ON n.id = s.newsletter_id 
+        WHERE s.subscriber_email = $1;
+    `
+	const query = `
+		SELECT n.id, n.public_id, n.name, n.description, n.created_at
+		FROM subscriptions s JOIN newsletters n ON n.id = s.newsletter_id
+		WHERE s.subscriber_email = $1
+		ORDER BY n.id
+		LIMIT $2 OFFSET $3;
+	`
+
+	var totalItems int
+	if err := o.pgConn.QueryRowContext(ctx, countQuery, p.Email).Scan(&totalItems); err != nil {
+		return nil, nil, fmt.Errorf("failed to get total count: %s", err.Error())
+	}
+
+	totalPages := int(math.Ceil(float64(totalItems) / float64(p.PageSize)))
+
+	offset := (p.PageNumber - 1) * p.PageSize
+
+	rows, err := o.pgConn.QueryContext(ctx, query, p.Email, p.PageSize, offset)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get newsletters by user id: %s", err.Error())
+	}
+
+	newsletters := make([]*row.Newsletter, 0, p.PageSize)
+
+	for rows.Next() {
+		var r row.Newsletter
+		if err := rows.Scan(&r.ID, &r.PublicID, &r.Name, &r.Description, &r.CreatedAt); err != nil {
+			if err := rows.Close(); err != nil {
+				return nil, nil, fmt.Errorf("failed to close rows: %s", err.Error())
+			}
+
+			return nil, nil, fmt.Errorf("failed to scan row: %s", err.Error())
+		}
+
+		newsletters = append(newsletters, &r)
+	}
+
+	if err := rows.Close(); err != nil {
+		return nil, nil, fmt.Errorf("failed to close rows: %s", err.Error())
+	}
+
+	return newsletters, dto.NewPagination(p.PageNumber, p.PageSize, totalPages, totalItems), nil
+}

@@ -2,12 +2,14 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
+	"github.com/javor454/newsletter-assignment/internal/application"
 	"github.com/javor454/newsletter-assignment/internal/application/dto"
 	"github.com/javor454/newsletter-assignment/internal/ui/http/request"
 )
@@ -69,14 +71,23 @@ func (u *UserController) Register(ctx *gin.Context) {
 
 	token, err := u.ruh.Handle(ctx, req.Email, req.Password)
 	if err != nil {
+		code, body := mapErrorsForRegister(err)
 		u.lg.WithError(err).Error("Failed to handle register")
-		ctx.JSON(http.StatusInternalServerError, gin.H{})
+		ctx.JSON(code, body)
 
 		return
 	}
 
 	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", token.String()))
 	ctx.JSON(http.StatusCreated, gin.H{})
+}
+
+func mapErrorsForRegister(err error) (int, gin.H) {
+	if errors.Is(err, application.EmailTakenError) {
+		return http.StatusConflict, gin.H{"error": "Email taken"}
+	}
+
+	return http.StatusInternalServerError, gin.H{}
 }
 
 func (u *UserController) Login(ctx *gin.Context) {
@@ -104,12 +115,21 @@ func (u *UserController) Login(ctx *gin.Context) {
 
 	token, err := u.luh.Handle(ctx, req.Email, req.Password)
 	if err != nil {
+		code, body := mapErrorsForLogin(err)
 		u.lg.WithError(err).Error("Failed to handle login")
-		ctx.JSON(http.StatusInternalServerError, gin.H{})
+		ctx.JSON(code, body)
 
 		return
 	}
 
 	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", token.String()))
 	ctx.JSON(http.StatusCreated, gin.H{})
+}
+
+func mapErrorsForLogin(err error) (int, gin.H) {
+	if errors.Is(err, application.UserNotFoundError) || errors.Is(err, application.InvalidPasswordError) {
+		return http.StatusUnauthorized, gin.H{"error": "Invalid credentials"}
+	}
+
+	return http.StatusInternalServerError, gin.H{}
 }

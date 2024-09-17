@@ -44,7 +44,7 @@ func main() {
 	rootCtx := shutdownHandler.CreateRootContextWithShutdown()
 
 	lg.Debug("[HTTP] Creating server...")
-	httpServer := http_server.NewServer(lg)
+	httpServer := http_server.NewServer(lg, appConfig)
 	lg.Debug("[HTTP] Server created")
 
 	internal.RegisterDependencies(httpServer, lg, pgConn, appConfig)

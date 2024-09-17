@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"github.com/javor454/newsletter-assignment/internal/application"
 )
 
 type GetUserByEmail struct {
@@ -35,10 +37,9 @@ func (o *GetUserByEmail) Execute(ctx context.Context, p *GetUserByEmailParams) (
 	var res UserRow
 	if err := o.pgConn.QueryRowContext(ctx, query, p.Email).Scan(&res.ID, &res.PasswordHash); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("user not found")
+			return nil, application.UserNotFoundError
 		}
 
-		// TODO: handle this in app somehow
 		return nil, fmt.Errorf("failed to get user by email: %s", err.Error())
 	}
 

@@ -4,19 +4,26 @@ import (
 	"context"
 	"time"
 
+	"github.com/javor454/newsletter-assignment/internal/application/dto"
 	"github.com/javor454/newsletter-assignment/internal/domain"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg/operation"
 )
 
 type NewsletterRepository struct {
-	createNewsletter       *operation.CreateNewsletter
-	getNewslettersByUserID *operation.GetNewslettersByUserID
+	createNewsletter                *operation.CreateNewsletter
+	getNewslettersByUserID          *operation.GetNewslettersByUserID
+	getNewslettersBySubscriberEmail *operation.GetNewslettersBySubscriberEmail
 }
 
-func NewNewsletterRepository(cn *operation.CreateNewsletter, gn *operation.GetNewslettersByUserID) *NewsletterRepository {
+func NewNewsletterRepository(
+	cn *operation.CreateNewsletter,
+	gn *operation.GetNewslettersByUserID,
+	gns *operation.GetNewslettersBySubscriberEmail,
+) *NewsletterRepository {
 	return &NewsletterRepository{
-		createNewsletter:       cn,
-		getNewslettersByUserID: gn,
+		createNewsletter:                cn,
+		getNewslettersByUserID:          gn,
+		getNewslettersBySubscriberEmail: gns,
 	}
 }
 
@@ -25,10 +32,12 @@ func (u *NewsletterRepository) Create(ctx context.Context, userID *domain.ID, ne
 	defer cancel()
 
 	if err := u.createNewsletter.Execute(ctx, &operation.CreateNewsletterParams{
-		UserID:       userID.String(),
-		NewsletterID: newsletter.Id().String(),
-		Name:         newsletter.Name(),
-		Description:  newsletter.Description(),
+		UserID:      userID.String(),
+		ID:          newsletter.ID().String(),
+		PublicID:    newsletter.PublicID().String(),
+		Name:        newsletter.Name(),
+		Description: newsletter.Description(),
+		CreatedAt:   newsletter.CreatedAt(),
 	}); err != nil {
 		return err
 	}
@@ -36,22 +45,50 @@ func (u *NewsletterRepository) Create(ctx context.Context, userID *domain.ID, ne
 	return nil
 }
 
-// TODO: test for nonexistent user id
-func (u *NewsletterRepository) GetByUserID(ctx context.Context, userID *domain.ID, pageSize, pageNumber int) ([]*domain.Newsletter, error) {
-	rows, err := u.getNewslettersByUserID.Execute(ctx, &operation.GetNewslettersByUserIDParams{
-		UserID:     userID.String(),
+func (u *NewsletterRepository) GetBySubscriberEmail(ctx context.Context, email *domain.Email, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error) {
+	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	defer cancel()
+
+	rows, pagination, err := u.getNewslettersBySubscriberEmail.Execute(ctx, &operation.GetNewslettersBySubscriberEmailParams{
+		Email:      email.String(),
 		PageSize:   pageSize,
 		PageNumber: pageNumber,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	newsletters := make([]*domain.Newsletter, 0, len(rows))
 	for _, row := range rows {
 		id := domain.CreateIDFromExisting(row.ID)
-		newsletters = append(newsletters, domain.CreateNewsletterFromExisting(id, row.Name, row.Description))
+		publicID := domain.CreateIDFromExisting(row.PublicID)
+		newsletters = append(newsletters, domain.CreateNewsletterFromExisting(id, publicID, row.Name, row.Description, row.CreatedAt))
 	}
 
-	return newsletters, nil
+	return newsletters, pagination, nil
+}
+
+// TODO: test for nonexistent user id
+
+func (u *NewsletterRepository) GetByUserID(ctx context.Context, userID *domain.ID, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error) {
+	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond) // TODO: scale with pageSize?
+	defer cancel()
+
+	rows, pagination, err := u.getNewslettersByUserID.Execute(ctx, &operation.GetNewslettersByUserIDParams{
+		UserID:     userID.String(),
+		PageSize:   pageSize,
+		PageNumber: pageNumber,
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	newsletters := make([]*domain.Newsletter, 0, len(rows))
+	for _, row := range rows {
+		id := domain.CreateIDFromExisting(row.ID)
+		publicID := domain.CreateIDFromExisting(row.PublicID)
+		newsletters = append(newsletters, domain.CreateNewsletterFromExisting(id, publicID, row.Name, row.Description, row.CreatedAt))
+	}
+
+	return newsletters, pagination, nil
 }

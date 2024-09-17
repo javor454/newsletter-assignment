@@ -20,22 +20,31 @@
       - db storing password ✅ 
     - user authentication JWT ✅
     - user authorization ✅
-    - newsletter management
-    - subscription management
+    - newsletter management ✅
+    - subscription management ✅
+    - link
+      - endpoint na subscribe ktery prijme public newsletter id a email subscribera WIP
     - email functionality
     - api documentation - swagger
-    - healthcheck
+    - healthcheck 
     - graceful shutdown
     - logs
     - panic recovery
     - security
       - rate limiting ????
-      - cors
-    - pagination
+      - cors ✅
+    - pagination ✅
+    - handle errors 
+      - registration : invalid password or email ✅
+      - registration with same email
+    - verify timeouts in infra
   - testing
     - system tests (func, unit, integration)
+    - jwt token
+      - expirace
+      - spatny format
 - FIX
-  - zkontrolovat volumes
+  - check volumes ✅
 - deployment
   - digital ocean
   - prod DB

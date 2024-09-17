@@ -22,7 +22,7 @@ func NewJwtService(secret string) *JwtService {
 func (j *JwtService) Generate(user *domain.User) (*dto.Token, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["sub"] = user.Id().String()
+	claims["sub"] = user.ID().String()
 	claims["iss"] = "newsletter-assignment" // TODO: url better? from env probably
 	claims["iat"] = time.Now().Unix()
 	claims["exp"] = time.Now().Add(1 * time.Hour).Unix()
@@ -58,10 +58,10 @@ func (j *JwtService) ParseToken(tokenStr string) (string, error) {
 		}
 	}
 
-	userId, exists := claims["sub"].(string)
-	if !exists || userId == "" {
+	userID, exists := claims["sub"].(string)
+	if !exists || userID == "" {
 		return "", fmt.Errorf("user id missing")
 	}
 
-	return userId, nil
+	return userID, nil
 }

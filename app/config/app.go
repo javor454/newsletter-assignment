@@ -6,15 +6,19 @@ import (
 )
 
 const (
-	envHttpPort  = "CONFIG_HTTP_PORT"
-	envLogLevel  = "CONFIG_LOG_LEVEL"
-	envJwtSecret = "CONFIG_JWT_SECRET"
+	envHttpPort           = "CONFIG_HTTP_PORT"
+	envLogLevel           = "CONFIG_LOG_LEVEL"
+	envJwtSecret          = "CONFIG_JWT_SECRET"
+	envCorsAllowedOrigins = "CONFIG_CORS_ALLOWED_ORIGINS"
+	envCorsAllowedHeaders = "CONFIG_CORS_ALLOWED_HEADERS"
 )
 
 type AppConfig struct {
-	HttpPort  int
-	LogLevel  logrus.Level
-	JwtSecret string
+	HttpPort           int
+	LogLevel           logrus.Level
+	JwtSecret          string
+	CorsAllowedOrigins []string
+	CorsAllowedHeaders []string
 }
 
 func CreateAppConfig() (*AppConfig, error) {
@@ -34,10 +38,20 @@ func CreateAppConfig() (*AppConfig, error) {
 	if jwtSecret == "" {
 		return nil, getMissingError(envJwtSecret)
 	}
+	corsAllowedOrigins := viper.GetStringSlice(envCorsAllowedOrigins)
+	if len(corsAllowedOrigins) == 0 {
+		return nil, getMissingError(envCorsAllowedOrigins)
+	}
+	corsAllowedHeaders := viper.GetStringSlice(envCorsAllowedHeaders)
+	if len(corsAllowedHeaders) == 0 {
+		return nil, getMissingError(envCorsAllowedHeaders)
+	}
 
 	return &AppConfig{
-		HttpPort:  httpPort,
-		LogLevel:  lvl,
-		JwtSecret: jwtSecret,
+		HttpPort:           httpPort,
+		LogLevel:           lvl,
+		JwtSecret:          jwtSecret,
+		CorsAllowedOrigins: corsAllowedOrigins,
+		CorsAllowedHeaders: corsAllowedHeaders,
 	}, nil
 }

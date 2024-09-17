@@ -9,6 +9,7 @@ CREATE TABLE users (
 
 CREATE TABLE newsletters (
     id UUID PRIMARY KEY,
+    public_id UUID NOT NULL,
     user_id UUID REFERENCES users(id),
     name VARCHAR(255) NOT NULL,
     description VARCHAR(255),
@@ -19,5 +20,6 @@ CREATE TABLE subscriptions (
     id UUID PRIMARY KEY,
     subscriber_email VARCHAR(255) NOT NULL,
     newsletter_id UUID REFERENCES newsletters(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (subscriber_email, newsletter_id)
 )

@@ -22,7 +22,7 @@ func CreateUserFromExisting(id *ID, email *Email, password *Password) *User {
 	}
 }
 
-func (u *User) Id() *ID {
+func (u *User) ID() *ID {
 	return u.id
 }
 

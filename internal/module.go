@@ -19,9 +19,13 @@ func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgCo
 	gube := operation.NewGetUserByEmail(pgConn)
 	cno := operation.NewCreateNewsletter(pgConn)
 	gnbui := operation.NewGetNewslettersByUserID(pgConn)
+	cs := operation.NewCreateSubscription(pgConn)
+	gnibpi := operation.NewGetNewsletterIDByPublicID(pgConn)
+	gnbse := operation.NewGetNewslettersBySubscriberEmail(pgConn)
 
 	ur := pg.NewUserRepository(cuo, gube)
-	nr := pg.NewNewsletterRepository(cno, gnbui)
+	nr := pg.NewNewsletterRepository(cno, gnbui, gnbse)
+	sr := pg.NewSubscriberRepository(gnibpi, cs)
 
 	js := auth.NewJwtService(appConfig.JwtSecret)
 
@@ -29,10 +33,13 @@ func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgCo
 	luh := handler.NewLoginUserHandler(ur, js)
 	dth := handler.NewDecodeTokenHandler(js)
 	cnh := handler.NewCreateNewsletterHandler(nr)
-	lnh := handler.NewGetNewslettersByUserIDHandler(nr)
+	gnbuih := handler.NewGetNewslettersByUserIDHandler(nr)
+	stnh := handler.NewSubscribeToNewsletterHandler(sr)
+	gnbseh := handler.NewGetNewslettersBySubscriberEmailHandler(nr)
 
 	am := middleware.NewAuthMiddleware(dth, lg)
 
 	controller.NewUserController(lg, httpServer, ruh, luh)
-	controller.NewNewsletterController(lg, httpServer, cnh, lnh, am)
+	controller.NewNewsletterController(lg, httpServer, cnh, stnh, gnbuih, am)
+	controller.NewSubscriberController(lg, httpServer, gnbseh)
 }
