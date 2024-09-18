@@ -27,7 +27,7 @@ type Server struct {
 }
 
 func NewServer(lg logger.Logger, cfg *config.AppConfig) *Server {
-	gin.SetMode(gin.DebugMode) // TODO: PROD MODE?
+	gin.SetMode(gin.ReleaseMode)
 	ge := gin.New()
 
 	cf := cors.DefaultConfig()

@@ -2,8 +2,10 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/javor454/newsletter-assignment/app/config"
+	"github.com/javor454/newsletter-assignment/app/firebase"
 	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/app/pg"
@@ -12,11 +14,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-//	@title			Newsletter assignment
-//	@version		1.0
-//	@description	Newsletter assignment for STRV.
-//	@contact.email	javornicky.jiri@gmail.com
+// @title			Newsletter assignment
+// @version		1.0
+// @description	Newsletter assignment for STRV.
+// @contact.email	javornicky.jiri@gmail.com
 func main() {
+	shutdownHandler := shutdown.NewHandler()
+
+	rootCtx := shutdownHandler.CreateRootContextWithShutdown()
+
 	viper.AutomaticEnv()
 	appConfig, err := config.CreateAppConfig()
 	if err != nil {
@@ -26,6 +32,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fbConfig, err := config.CreateFirebaseConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	location, err := time.LoadLocation(appConfig.Timezone)
+	if err != nil {
+		panic(err)
+	}
+	time.Local = location
 
 	lg := logger.NewLogger(appConfig)
 
@@ -36,22 +52,21 @@ func main() {
 	}
 	lg.Info("[PG] Connected")
 
+	lg.Debug("[FIREBASE] Connecting...")
+	fbClient, err := firebase.NewClient(rootCtx, fbConfig, lg)
+	lg.Info("[FIREBASE] Connected")
+
 	lg.Debug("[MIGRATIONS] Starting up...")
 	if err := pg.MigrationsUp(pgConn); err != nil {
 		log.Fatal(err)
 	}
 	lg.Info("[MIGRATIONS] Done")
 
-	shutdownHandler := shutdown.NewHandler()
-
-	lg.Debug("Creating root context")
-	rootCtx := shutdownHandler.CreateRootContextWithShutdown()
-
 	lg.Debug("[HTTP] Creating server...")
 	httpServer := http_server.NewServer(lg, appConfig)
 	lg.Debug("[HTTP] Server created")
 
-	internal.RegisterDependencies(httpServer, lg, pgConn, appConfig)
+	internal.RegisterDependencies(httpServer, lg, pgConn, appConfig, fbClient)
 
 	lg.Debug("[HTTP] Running server...")
 	ginErrChan := httpServer.RunGinServer(appConfig.HttpPort)

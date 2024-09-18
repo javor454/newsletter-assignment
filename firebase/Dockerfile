@@ -14,7 +14,7 @@ COPY .firebaserc .
 COPY database.rules.json .
 
 # Expose ports for Realtime Database and Auth emulators
-EXPOSE 9000 9099
+EXPOSE 9000 4000
 
 # Start Firebase emulators
 CMD ["firebase", "emulators:start", "--only", "database,auth"]

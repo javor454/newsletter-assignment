@@ -38,12 +38,12 @@ func NewSubscriberController(
 	return controller
 }
 
-//	 TODO dava smysl tady?
+//	 TODO dava smysl tady??:
 
 // GetNewslettersBySubscriberEmail
 //
 //	@Summary	GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's email
-//	@Router		/api/v1/subscribers/:email/newsletters [get]
+//	@Router		/api/v1/subscribers/{email}/newsletters [get]
 //	@Tags		public subscriber
 //
 //	@Param		Content-Type	header	string	true	"application/json"			default(application/json)

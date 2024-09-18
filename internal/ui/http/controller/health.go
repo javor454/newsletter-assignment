@@ -28,6 +28,7 @@ func NewHealthController(
 }
 
 // Liveness
+//
 //	@Router		/api/health/liveness [get]
 //	@Summary	Liveness - determines if app is running
 //	@Tags		health
@@ -37,6 +38,7 @@ func (c *HealthController) Liveness(ctx *gin.Context) {
 }
 
 // Readiness
+//
 //	@Router		/api/health/readiness [get]
 //	@Summary	Readiness - determines if app is ready to receive traffic
 //	@Tags		health

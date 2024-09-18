@@ -25,7 +25,7 @@ type PostgresConfig struct {
 func CreatePostgresConfig() (*PostgresConfig, error) {
 	user := viper.GetString(envPgUser)
 	if user == "" {
-		return nil, getMissingError(envHttpPort)
+		return nil, getMissingError(envPgUser)
 	}
 	password := viper.GetString(envPgPassword)
 	if password == "" {

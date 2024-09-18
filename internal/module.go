@@ -4,19 +4,21 @@ import (
 	"database/sql"
 	"time"
 
+	"firebase.google.com/go/v4/db"
 	"github.com/javor454/newsletter-assignment/app/config"
 	"github.com/javor454/newsletter-assignment/app/healthcheck"
 	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/internal/application/handler"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/auth"
+	"github.com/javor454/newsletter-assignment/internal/infrastructure/firebase"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg/operation"
 	"github.com/javor454/newsletter-assignment/internal/ui/http/controller"
 	"github.com/javor454/newsletter-assignment/internal/ui/http/middleware"
 )
 
-func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgConn *sql.DB, appConfig *config.AppConfig) {
+func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgConn *sql.DB, appConfig *config.AppConfig, fbClient *db.Client) {
 	cuo := operation.NewCreateUser(pgConn)
 	gube := operation.NewGetUserByEmail(pgConn)
 	cno := operation.NewCreateNewsletter(pgConn)
@@ -29,6 +31,8 @@ func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgCo
 	nr := pg.NewNewsletterRepository(cno, gnbui, gnbse)
 	sr := pg.NewSubscriberRepository(gnibpi, cs)
 
+	fsr := firebase.NewSubscriptionRepository(fbClient)
+
 	js := auth.NewJwtService(appConfig.JwtSecret)
 
 	hm := healthcheck.NewHealthMonitor(
@@ -40,7 +44,7 @@ func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgCo
 	dth := handler.NewDecodeTokenHandler(js)
 	cnh := handler.NewCreateNewsletterHandler(nr)
 	gnbuih := handler.NewGetNewslettersByUserIDHandler(nr)
-	stnh := handler.NewSubscribeToNewsletterHandler(sr)
+	stnh := handler.NewSubscribeToNewsletterHandler(sr, fsr)
 	gnbseh := handler.NewGetNewslettersBySubscriberEmailHandler(nr)
 
 	am := middleware.NewAuthMiddleware(dth, lg)

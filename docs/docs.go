@@ -166,12 +166,12 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/newsletters/:newsletter_public_id/subscriptions": {
+        "/api/v1/newsletters/{newsletter_public_id}/subscriptions": {
             "post": {
                 "tags": [
                     "newsletter"
                 ],
-                "summary": "Create - used to create new newsletter",
+                "summary": "SubscribeToNewsletter - used to subscribe to newsletter by email",
                 "parameters": [
                     {
                         "type": "string",
@@ -234,7 +234,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/subscribers/:email/newsletters": {
+        "/api/v1/subscribers/{email}/newsletters": {
             "get": {
                 "tags": [
                     "public subscriber"

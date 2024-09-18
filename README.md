@@ -59,7 +59,7 @@
       - registration : invalid password or email ✅
       - registration with same email ✅
     - verify timeouts in infra ✅
-    - tags
+    - 
   - testing
     - system tests (func, unit, integration)
     - jwt token
@@ -77,6 +77,8 @@
   - envs
   - ssl/tls
   - domena?
+  - tags
+  - zero downtime redeploy?
 - predani
   - readme
     - functionality overview

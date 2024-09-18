@@ -161,7 +161,7 @@ paths:
       summary: Create - used to create new newsletter
       tags:
       - newsletter
-  /api/v1/newsletters/:newsletter_public_id/subscriptions:
+  /api/v1/newsletters/{newsletter_public_id}/subscriptions:
     post:
       parameters:
       - default: application/json
@@ -204,10 +204,10 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: Create - used to create new newsletter
+      summary: SubscribeToNewsletter - used to subscribe to newsletter by email
       tags:
       - newsletter
-  /api/v1/subscribers/:email/newsletters:
+  /api/v1/subscribers/{email}/newsletters:
     get:
       parameters:
       - default: application/json

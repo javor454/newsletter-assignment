@@ -8,6 +8,8 @@ import (
 	"github.com/javor454/newsletter-assignment/app/config"
 )
 
+// TODO (nice2have): prepare wrapper for readability in code
+
 func NewConnection(conf *config.PostgresConfig) (*sql.DB, error) {
 	db, err := sql.Open(
 		"postgres",

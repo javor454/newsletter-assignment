@@ -11,6 +11,7 @@ const (
 	envJwtSecret          = "CONFIG_JWT_SECRET"
 	envCorsAllowedOrigins = "CONFIG_CORS_ALLOWED_ORIGINS"
 	envCorsAllowedHeaders = "CONFIG_CORS_ALLOWED_HEADERS"
+	envTimezone           = "CONFIG_TIMEZONE"
 )
 
 type AppConfig struct {
@@ -19,6 +20,7 @@ type AppConfig struct {
 	JwtSecret          string
 	CorsAllowedOrigins []string
 	CorsAllowedHeaders []string
+	Timezone           string
 }
 
 func CreateAppConfig() (*AppConfig, error) {
@@ -46,6 +48,10 @@ func CreateAppConfig() (*AppConfig, error) {
 	if len(corsAllowedHeaders) == 0 {
 		return nil, getMissingError(envCorsAllowedHeaders)
 	}
+	timezone := viper.GetString(envTimezone)
+	if timezone == "" {
+		return nil, getMissingError(envTimezone)
+	}
 
 	return &AppConfig{
 		HttpPort:           httpPort,
@@ -53,5 +59,6 @@ func CreateAppConfig() (*AppConfig, error) {
 		JwtSecret:          jwtSecret,
 		CorsAllowedOrigins: corsAllowedOrigins,
 		CorsAllowedHeaders: corsAllowedHeaders,
+		Timezone:           timezone,
 	}, nil
 }

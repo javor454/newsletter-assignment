@@ -128,8 +128,8 @@ func (u *NewsletterController) Create(ctx *gin.Context) {
 
 // SubscribeToNewsletter
 //
-//	@Summary	Create - used to create new newsletter
-//	@Router		/api/v1/newsletters/:newsletter_public_id/subscriptions [post]
+//	@Summary	SubscribeToNewsletter - used to subscribe to newsletter by email
+//	@Router		/api/v1/newsletters/{newsletter_public_id}/subscriptions [post]
 //	@Tags		newsletter
 //
 //	@Param		Content-Type			header	string							true	"application/json"	default(application/json)
