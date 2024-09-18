@@ -23,7 +23,10 @@ func (r *SubscribeToNewsletterHandler) Handle(ctx context.Context, newsletterPub
 	if err != nil {
 		return err
 	}
-	pubID := domain.CreateIDFromExisting(newsletterPublicID)
+	pubID, err := domain.CreateIDFromExisting(newsletterPublicID)
+	if err != nil {
+		return err
+	}
 
 	subscription := domain.NewSubscription(pubID, emailVo)
 	if err := r.subscribeToNewsletter.Subscribe(ctx, subscription); err != nil {

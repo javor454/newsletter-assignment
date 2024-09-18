@@ -12,6 +12,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+//	@title			Newsletter assignment
+//	@version		1.0
+//	@description	Newsletter assignment for STRV.
+//	@contact.email	javornicky.jiri@gmail.com
 func main() {
 	viper.AutomaticEnv()
 	appConfig, err := config.CreateAppConfig()

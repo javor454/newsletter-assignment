@@ -2,8 +2,10 @@ package internal
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/javor454/newsletter-assignment/app/config"
+	"github.com/javor454/newsletter-assignment/app/healthcheck"
 	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/internal/application/handler"
@@ -29,6 +31,10 @@ func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgCo
 
 	js := auth.NewJwtService(appConfig.JwtSecret)
 
+	hm := healthcheck.NewHealthMonitor(
+		healthcheck.NewPgIndicator(pgConn, 5*time.Second),
+	)
+
 	ruh := handler.NewRegisterUserHandler(ur, js)
 	luh := handler.NewLoginUserHandler(ur, js)
 	dth := handler.NewDecodeTokenHandler(js)
@@ -39,6 +45,7 @@ func RegisterDependencies(httpServer *http_server.Server, lg logger.Logger, pgCo
 
 	am := middleware.NewAuthMiddleware(dth, lg)
 
+	controller.NewHealthController(lg, httpServer, hm)
 	controller.NewUserController(lg, httpServer, ruh, luh)
 	controller.NewNewsletterController(lg, httpServer, cnh, stnh, gnbuih, am)
 	controller.NewSubscriberController(lg, httpServer, gnbseh)

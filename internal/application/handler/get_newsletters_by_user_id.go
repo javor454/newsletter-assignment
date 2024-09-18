@@ -20,7 +20,11 @@ func NewGetNewslettersByUserIDHandler(gnbui GetNewslettersByUserID) *GetNewslett
 }
 
 func (g *GetNewslettersByUserIDHandler) Handle(ctx context.Context, userID string, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error) {
-	id := domain.CreateIDFromExisting(userID)
+	id, err := domain.CreateIDFromExisting(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	newsletters, pagination, err := g.getNewslettersByUserID.GetByUserID(ctx, id, pageSize, pageNumber)
 	if err != nil {
 		return nil, nil, err

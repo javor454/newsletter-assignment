@@ -61,6 +61,20 @@ func NewNewsletterController(
 	return controller
 }
 
+// Create
+//
+//	@Summary	Create - used to create new newsletter
+//	@Router		/api/v1/newsletters [post]
+//	@Tags		newsletter
+//
+//	@Param		Content-Type	header	string							true	"application/json"	default(application/json)
+//	@Param		Authorization	header	string							true	"Bearer <token>"	default(Bearer )
+//	@Param		Newsletter		body	request.CreateNewsletterRequest	true	"Newsletter data to create"
+//
+//	@Success	201				"Newsletter was successfully created"
+//	@Failure	400				{object}	response.Error	"Invalid request with detail"
+//	@Failure	404				{object}	response.Error	"Unknown user"
+//	@Failure	500				"Unexpected exception"
 func (u *NewsletterController) Create(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {
@@ -94,6 +108,9 @@ func (u *NewsletterController) Create(ctx *gin.Context) {
 
 	if err := u.createNewsletter.Handle(ctx, userID.(string), req.Name, req.Description); err != nil {
 		code, body := func(err error) (int, gin.H) {
+			if errors.Is(err, application.InvalidUUIDError) {
+				return http.StatusBadRequest, gin.H{"error": err.Error()}
+			}
 			if errors.Is(err, application.UnknownUserError) {
 				return http.StatusNotFound, gin.H{"error": "Unknown user"}
 			}
@@ -109,6 +126,22 @@ func (u *NewsletterController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{})
 }
 
+// SubscribeToNewsletter
+//
+//	@Summary	Create - used to create new newsletter
+//	@Router		/api/v1/newsletters/:newsletter_public_id/subscriptions [post]
+//	@Tags		newsletter
+//
+//	@Param		Content-Type			header	string							true	"application/json"	default(application/json)
+//	@Param		Authorization			header	string							true	"Bearer <token>"	default(Bearer )
+//	@Param		newsletter_public_id	path	string							true	"Public newsletter identifier"
+//	@Param		email					body	request.SubscribeToNewsletter	true	"Subscriber email address"
+//
+//	@Success	201						"Successfully subscribed to newsletter"
+//	@Failure	400						{object}	response.Error	"Invalid request with detail"
+//	@Failure	404						{object}	response.Error	"Newsletter not found"
+//	@Failure	409						{object}	response.Error	"Already subscribed to newsletter"
+//	@Failure	500						"Unexpected exception"
 func (u *NewsletterController) SubscribeToNewsletter(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {
@@ -140,11 +173,16 @@ func (u *NewsletterController) SubscribeToNewsletter(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: handle duplicit subscribe
 	if err := u.subscribeToNewsletter.Handle(ctx, newsletterID, req.Email); err != nil {
 		code, body := func(err error) (int, gin.H) {
+			if errors.Is(err, application.InvalidUUIDError) {
+				return http.StatusBadRequest, gin.H{"error": err.Error()}
+			}
 			if errors.Is(err, application.AlreadySubscibedToNewsletterError) {
 				return http.StatusConflict, gin.H{"error": "Already subscribed to newsletter"}
+			}
+			if errors.Is(err, application.NewsletterNotFoundError) {
+				return http.StatusNotFound, gin.H{"error": "Newsletter not found"}
 			}
 
 			return http.StatusInternalServerError, gin.H{}
@@ -158,6 +196,21 @@ func (u *NewsletterController) SubscribeToNewsletter(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{})
 }
 
+// GetNewslettersByUserID
+//
+//	@Summary	GetNewslettersByUserID - retrieve newsletter by creator's user ID
+//	@Router		/api/v1/newsletters [get]
+//	@Tags		newsletter
+//
+//	@Param		Content-Type	header	string	true	"application/json"			default(application/json)
+//	@Param		Authorization	header	string	true	"Bearer <token>"			default(Bearer )
+//	@Param		page_size		query	int		true	"Number of items on page"	default(10)	minimum(1)
+//	@Param		page_number		query	int		true	"Page number"				default(1)	minimum(1)
+//
+//	@Success	201				"Successfully retrieved newsletters by user ID"
+//	@Failure	400				{object}	response.Error	"Invalid request with detail"
+//	@Failure	409				{object}	response.Error	"Already subscribed to newsletter"
+//	@Failure	500				"Unexpected exception"
 func (u *NewsletterController) GetNewslettersByUserID(ctx *gin.Context) {
 	pageSize, err := strconv.Atoi(ctx.DefaultQuery("page_size", "10"))
 	if err != nil {
@@ -166,6 +219,7 @@ func (u *NewsletterController) GetNewslettersByUserID(ctx *gin.Context) {
 
 		return
 	}
+	// TODO:a
 	if pageSize < 1 {
 		u.lg.WithError(err).Error("Failed to parse page size")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid pageSize"})
@@ -197,8 +251,15 @@ func (u *NewsletterController) GetNewslettersByUserID(ctx *gin.Context) {
 
 	newsletters, pagination, err := u.getNewslettersByUserID.Handle(ctx, userID.(string), pageSize, pageNumber)
 	if err != nil {
+		code, body := func(err error) (int, gin.H) {
+			if errors.Is(err, application.InvalidUUIDError) {
+				return http.StatusBadRequest, gin.H{"error": err.Error()}
+			}
+
+			return http.StatusInternalServerError, gin.H{}
+		}(err)
 		u.lg.WithError(err).Error("Failed to list newsletter")
-		ctx.JSON(http.StatusInternalServerError, gin.H{})
+		ctx.JSON(code, body)
 
 		return
 	}

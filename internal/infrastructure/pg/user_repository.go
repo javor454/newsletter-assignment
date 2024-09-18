@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/javor454/newsletter-assignment/internal/application"
@@ -57,7 +58,10 @@ func (u *UserRepository) GetByEmailAndPassword(
 		return nil, err
 	}
 
-	id := domain.CreateIDFromExisting(res.ID)
+	id, err := domain.CreateIDFromExisting(res.ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+	}
 	bcryptHash := crypt.CreateHashFromExisting(res.PasswordHash)
 	if !bcryptHash.IsEqual(pass) {
 		return nil, application.InvalidPasswordError

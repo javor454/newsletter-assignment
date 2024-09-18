@@ -7,10 +7,16 @@ import (
 	"net/http"
 	"time"
 
+	_ "github.com/javor454/newsletter-assignment/docs"
+	"github.com/swaggo/swag"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/javor454/newsletter-assignment/app/config"
 	"github.com/javor454/newsletter-assignment/app/logger"
+	"github.com/javor454/newsletter-assignment/internal/ui/http/middleware"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server struct {
@@ -30,9 +36,22 @@ func NewServer(lg logger.Logger, cfg *config.AppConfig) *Server {
 	cf.AllowHeaders = cfg.CorsAllowedHeaders
 	cf.AllowCredentials = true
 	cf.MaxAge = 12 * time.Hour
-	ge.Use(cors.New(cf))
 
-	// TODO: panic middleware
+	ge.Use(cors.New(cf))
+	ge.Use(gin.Recovery())
+	ge.Use(middleware.LoggingMiddleware(lg, []string{"/api/docs"}))
+
+	gsc := ginSwagger.Config{
+		URL:                      "doc.json",
+		DocExpansion:             "list",
+		InstanceName:             swag.Name,
+		Title:                    "Newsletter API",
+		DefaultModelsExpandDepth: 2,
+		DeepLinking:              true,
+		PersistAuthorization:     false,
+		Oauth2DefaultClientID:    "",
+	}
+	ge.GET("/api/docs/*any", ginSwagger.CustomWrapHandler(&gsc, swaggerFiles.Handler))
 
 	return &Server{
 		engine: ge,

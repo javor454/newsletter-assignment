@@ -1,5 +1,17 @@
 # Newsletter assignment
 
+## Setup
+- run `make up`
+
+## API documentation
+- available on `/api/docs/index.html`
+
+## Functionality overview
+- TODO
+
+## Flows
+- TODO
+
 ## Development plan
 - Setup project via docker compose ✅
   - go app ✅
@@ -26,23 +38,34 @@
       - endpoint na subscribe ktery prijme public newsletter id a email subscribera WIP
     - email functionality
     - api documentation - swagger
-    - healthcheck 
+      - definition ✅  
+      - test if works
+      - double check
+    - healthcheck ✅
+      - pg
+      - firebase
+      - email handler
     - graceful shutdown
-    - logs
-    - panic recovery
+      - pg ✅
+      - firebase
+      - email handler
+    - logs ✅
+    - panic recovery ✅
     - security
       - rate limiting ????
       - cors ✅
     - pagination ✅
-    - handle errors 
+    - handle errors ✅
       - registration : invalid password or email ✅
-      - registration with same email
-    - verify timeouts in infra
+      - registration with same email ✅
+    - verify timeouts in infra ✅
+    - tags
   - testing
     - system tests (func, unit, integration)
     - jwt token
       - expirace
       - spatny format
+    - podle aplikacnich erroru
 - FIX
   - check volumes ✅
 - deployment
@@ -57,8 +80,8 @@
 - predani
   - readme
     - functionality overview
-    - setup 
-    - link to api docs
+    - setup ✅
+    - link to api docs ✅
     - architecture decisions?
     - future improvements?
     - popis flows

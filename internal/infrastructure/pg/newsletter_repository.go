@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/javor454/newsletter-assignment/internal/application/dto"
@@ -60,8 +61,14 @@ func (u *NewsletterRepository) GetBySubscriberEmail(ctx context.Context, email *
 
 	newsletters := make([]*domain.Newsletter, 0, len(rows))
 	for _, row := range rows {
-		id := domain.CreateIDFromExisting(row.ID)
-		publicID := domain.CreateIDFromExisting(row.PublicID)
+		id, err := domain.CreateIDFromExisting(row.ID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+		}
+		publicID, err := domain.CreateIDFromExisting(row.PublicID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+		}
 		newsletters = append(newsletters, domain.CreateNewsletterFromExisting(id, publicID, row.Name, row.Description, row.CreatedAt))
 	}
 
@@ -85,8 +92,14 @@ func (u *NewsletterRepository) GetByUserID(ctx context.Context, userID *domain.I
 
 	newsletters := make([]*domain.Newsletter, 0, len(rows))
 	for _, row := range rows {
-		id := domain.CreateIDFromExisting(row.ID)
-		publicID := domain.CreateIDFromExisting(row.PublicID)
+		id, err := domain.CreateIDFromExisting(row.ID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+		}
+		publicID, err := domain.CreateIDFromExisting(row.PublicID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+		}
 		newsletters = append(newsletters, domain.CreateNewsletterFromExisting(id, publicID, row.Name, row.Description, row.CreatedAt))
 	}
 

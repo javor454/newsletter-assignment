@@ -1,10 +1,10 @@
 package request
 
 type CreateNewsletterRequest struct {
-	Name        string  `json:"name" binding:"required"`
-	Description *string `json:"description,omitempty"`
+	Name        string  `json:"name" binding:"required" example:"Tiktok News 420"`
+	Description *string `json:"description,omitempty" example:"Amazing news from the TikTok world. You would not believe number 4."`
 }
 
 type SubscribeToNewsletter struct {
-	Email string `json:"email" binding:"required"`
+	Email string `json:"email" binding:"required" example:"test@test.com"`
 }

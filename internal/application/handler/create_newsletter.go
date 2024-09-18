@@ -19,7 +19,11 @@ func NewCreateNewsletterHandler(cn CreateNewsletter) *CreateNewsletterHandler {
 }
 
 func (r *CreateNewsletterHandler) Handle(ctx context.Context, userID, name string, description *string) error {
-	id := domain.CreateIDFromExisting(userID)
+	id, err := domain.CreateIDFromExisting(userID)
+	if err != nil {
+		return err
+	}
+
 	newsletter := domain.NewNewsletter(name, description)
 
 	if err := r.createNewsletter.Create(ctx, id, newsletter); err != nil {

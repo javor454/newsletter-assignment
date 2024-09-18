@@ -46,6 +46,19 @@ func NewUserController(
 	return controller
 }
 
+// Register
+//
+//	@Summary	Register - Register user
+//	@Router		/api/v1/users/register [post]
+//	@Tags		public user
+//
+//	@Param		Content-Type	header	string						true	"application/json"	default(application/json)
+//	@Param		data			body	request.RegisterUserRequest	true	"Data for registering user"
+//
+//	@Success	201				"User was successfully registered"
+//	@Failure	400				{object}	response.Error	"Invalid request with detail"
+//	@Failure	409				{object}	response.Error	"Email taken"
+//	@Failure	500				"Unexpected exception"
 func (u *UserController) Register(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {
@@ -71,7 +84,13 @@ func (u *UserController) Register(ctx *gin.Context) {
 
 	token, err := u.ruh.Handle(ctx, req.Email, req.Password)
 	if err != nil {
-		code, body := mapErrorsForRegister(err)
+		code, body := func(err error) (int, gin.H) {
+			if errors.Is(err, application.EmailTakenError) {
+				return http.StatusConflict, gin.H{"error": "Email taken"}
+			}
+
+			return http.StatusInternalServerError, gin.H{}
+		}(err)
 		u.lg.WithError(err).Error("Failed to handle register")
 		ctx.JSON(code, body)
 
@@ -82,14 +101,19 @@ func (u *UserController) Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{})
 }
 
-func mapErrorsForRegister(err error) (int, gin.H) {
-	if errors.Is(err, application.EmailTakenError) {
-		return http.StatusConflict, gin.H{"error": "Email taken"}
-	}
-
-	return http.StatusInternalServerError, gin.H{}
-}
-
+// Login
+//
+//	@Summary	Login - Login user
+//	@Router		/api/v1/users/login [post]
+//	@Tags		public user
+//
+//	@Param		Content-Type	header	string						true	"application/json"	default(application/json)
+//	@Param		data			body	request.RegisterUserRequest	true	"Data for user login"
+//
+//	@Success	201				"User successfully logged in"
+//	@Failure	400				{object}	response.Error	"Invalid request with detail"
+//	@Failure	401				{object}	response.Error	"Invalid credentials"
+//	@Failure	500				"Unexpected exception"
 func (u *UserController) Login(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {
@@ -115,7 +139,13 @@ func (u *UserController) Login(ctx *gin.Context) {
 
 	token, err := u.luh.Handle(ctx, req.Email, req.Password)
 	if err != nil {
-		code, body := mapErrorsForLogin(err)
+		code, body := func(err error) (int, gin.H) {
+			if errors.Is(err, application.UserNotFoundError) || errors.Is(err, application.InvalidPasswordError) {
+				return http.StatusUnauthorized, gin.H{"error": "Invalid credentials"}
+			}
+
+			return http.StatusInternalServerError, gin.H{}
+		}(err)
 		u.lg.WithError(err).Error("Failed to handle login")
 		ctx.JSON(code, body)
 
@@ -124,12 +154,4 @@ func (u *UserController) Login(ctx *gin.Context) {
 
 	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", token.String()))
 	ctx.JSON(http.StatusCreated, gin.H{})
-}
-
-func mapErrorsForLogin(err error) (int, gin.H) {
-	if errors.Is(err, application.UserNotFoundError) || errors.Is(err, application.InvalidPasswordError) {
-		return http.StatusUnauthorized, gin.H{"error": "Invalid credentials"}
-	}
-
-	return http.StatusInternalServerError, gin.H{}
 }

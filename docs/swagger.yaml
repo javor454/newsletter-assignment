@@ -1,0 +1,313 @@
+definitions:
+  request.CreateNewsletterRequest:
+    properties:
+      description:
+        example: Amazing news from the TikTok world. You would not believe number
+          4.
+        type: string
+      name:
+        example: Tiktok News 420
+        type: string
+    required:
+    - name
+    type: object
+  request.RegisterUserRequest:
+    properties:
+      email:
+        example: test@test.com
+        type: string
+      password:
+        example: Pa$$W0rD
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  request.SubscribeToNewsletter:
+    properties:
+      email:
+        example: test@test.com
+        type: string
+    required:
+    - email
+    type: object
+  response.Error:
+    properties:
+      error:
+        example: Error description
+        type: string
+    type: object
+  response.HealthStatus:
+    properties:
+      indicators:
+        items:
+          $ref: '#/definitions/response.Indicator'
+        type: array
+      status:
+        type: string
+    type: object
+  response.Indicator:
+    properties:
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+info:
+  contact:
+    email: javornicky.jiri@gmail.com
+  description: Newsletter assignment for STRV.
+  title: Newsletter assignment
+  version: "1.0"
+paths:
+  /api/health/liveness:
+    get:
+      responses:
+        "200":
+          description: OK
+      summary: Liveness - determines if app is running
+      tags:
+      - health
+  /api/health/readiness:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.HealthStatus'
+      summary: Readiness - determines if app is ready to receive traffic
+      tags:
+      - health
+  /api/v1/newsletters:
+    get:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - default: Bearer
+        description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - default: 10
+        description: Number of items on page
+        in: query
+        minimum: 1
+        name: page_size
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page_number
+        required: true
+        type: integer
+      responses:
+        "201":
+          description: Successfully retrieved newsletters by user ID
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Already subscribed to newsletter
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: GetNewslettersByUserID - retrieve newsletter by creator's user ID
+      tags:
+      - newsletter
+    post:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - default: Bearer
+        description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Newsletter data to create
+        in: body
+        name: Newsletter
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateNewsletterRequest'
+      responses:
+        "201":
+          description: Newsletter was successfully created
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Unknown user
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: Create - used to create new newsletter
+      tags:
+      - newsletter
+  /api/v1/newsletters/:newsletter_public_id/subscriptions:
+    post:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - default: Bearer
+        description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Public newsletter identifier
+        in: path
+        name: newsletter_public_id
+        required: true
+        type: string
+      - description: Subscriber email address
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/request.SubscribeToNewsletter'
+      responses:
+        "201":
+          description: Successfully subscribed to newsletter
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Newsletter not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Already subscribed to newsletter
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: Create - used to create new newsletter
+      tags:
+      - newsletter
+  /api/v1/subscribers/:email/newsletters:
+    get:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - default: 10
+        description: Number of items on page
+        in: query
+        minimum: 1
+        name: page_size
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page_number
+        required: true
+        type: integer
+      - description: Subscribers email
+        in: path
+        name: email
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Successfully retrieved newsletters by subscriber email
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's
+        email
+      tags:
+      - public subscriber
+  /api/v1/users/login:
+    post:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - description: Data for user login
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.RegisterUserRequest'
+      responses:
+        "201":
+          description: User successfully logged in
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: Login - Login user
+      tags:
+      - public user
+  /api/v1/users/register:
+    post:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - description: Data for registering user
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.RegisterUserRequest'
+      responses:
+        "201":
+          description: User was successfully registered
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Email taken
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: Register - Register user
+      tags:
+      - public user
+swagger: "2.0"

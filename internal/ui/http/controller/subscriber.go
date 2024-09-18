@@ -2,14 +2,12 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
-	"github.com/javor454/newsletter-assignment/internal/application"
 	"github.com/javor454/newsletter-assignment/internal/application/dto"
 	"github.com/javor454/newsletter-assignment/internal/domain"
 	"github.com/javor454/newsletter-assignment/internal/ui/http/request"
@@ -40,6 +38,22 @@ func NewSubscriberController(
 	return controller
 }
 
+//	 TODO dava smysl tady?
+
+// GetNewslettersBySubscriberEmail
+//
+//	@Summary	GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's email
+//	@Router		/api/v1/subscribers/:email/newsletters [get]
+//	@Tags		public subscriber
+//
+//	@Param		Content-Type	header	string	true	"application/json"			default(application/json)
+//	@Param		page_size		query	int		true	"Number of items on page"	default(10)	minimum(1)
+//	@Param		page_number		query	int		true	"Page number"				default(1)	minimum(1)
+//	@Param		email			path	string	true	"Subscribers email"
+//
+//	@Success	201				"Successfully retrieved newsletters by subscriber email"
+//	@Failure	400				{object}	response.Error	"Invalid request with detail"
+//	@Failure	500				"Unexpected exception"
 func (u *SubscriberController) GetNewslettersBySubscriberEmail(ctx *gin.Context) {
 	pageSize, err := strconv.Atoi(ctx.DefaultQuery("page_size", "10"))
 	if err != nil {
@@ -94,9 +108,6 @@ func (u *SubscriberController) GetNewslettersBySubscriberEmail(ctx *gin.Context)
 	newsletters, pagination, err := u.getNewslettersBySubscriberEmailHandler.Handle(ctx, email, pageSize, pageNumber)
 	if err != nil {
 		code, body := func(err error) (int, gin.H) {
-			if errors.Is(err, application.NewsletterNotFoundError) {
-				return http.StatusNotFound, gin.H{"error": "Newsletter not found"}
-			}
 			return http.StatusInternalServerError, gin.H{}
 		}(err)
 		u.lg.WithError(err).Error("Failed to get newsletter by subscriber email")
@@ -105,7 +116,7 @@ func (u *SubscriberController) GetNewslettersBySubscriberEmail(ctx *gin.Context)
 		return
 	}
 
-	// TODO (nice2have): rm duplicated logic - maybe factory?
+	// TODO (nice2have): rm duplicated logic - maybe factory??
 	mapped := make([]response.GetNewslettersBySubscriberEmailResponse, 0, len(newsletters))
 	for _, n := range newsletters {
 		mapped = append(mapped, response.CreateGetNewslettersBySubscriberEmailResponseFromEntity(n))

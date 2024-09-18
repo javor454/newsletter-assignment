@@ -9,4 +9,5 @@ var (
 	EmailTakenError                   = errors.New("email already taken")
 	AlreadySubscibedToNewsletterError = errors.New("already subscibed to newsletter")
 	UnknownUserError                  = errors.New("unknown user")
+	InvalidUUIDError                  = errors.New("invalid uuid")
 )
