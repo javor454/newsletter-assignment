@@ -39,7 +39,7 @@ func (o *CreateUser) Execute(ctx context.Context, p *CreateUserParams) error {
 			return application.EmailTakenError
 		}
 
-		return fmt.Errorf("failed to create user: %s", err.Error())
+		return fmt.Errorf("failed to create user: %w", err)
 	}
 
 	return nil

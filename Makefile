@@ -7,3 +7,8 @@ up: ## Start up application container
 
 down: ## Stop and remove the application containers
 	docker compose down --volumes --remove-orphans
+
+# TODO: dockerize
+swag: # Format and build swagger docs
+	swag fmt
+	swag init

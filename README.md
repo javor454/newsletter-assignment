@@ -1,31 +1,179 @@
 # Newsletter assignment
 
+## Prerequisities
+- gnu make
+- docker + docker compose
+
 ## Setup
 - run `make up`
 
 ## API documentation
-- available on `/api/docs/index.html`
+- available on 
+  - development: http://localhost:8080/api/docs/index.html
+  - production: TODO
 
-## Functionality overview
-- TODO
+## Architecture
+- hexagon
+- solid
+- transaction outbox pattern
+
+## Features
+### Users
+#### Registration
+- HTTP API designed by REST principles
+- public endpoint
+- POST `api/v1/users/register`
+- scenarios
+  - success scenario
+    - in request send with email and password
+    - validate email
+    - encrypt password with bcrypt (hash password + salt)
+    - save to postgres
+    - generate JWT token containing userID, issued at and expiration timestamp
+    - respond with token in authorization header
+  - fail scenarios
+    - in case of invalid request, receive 400
+    - for registration with taken email, receive 409 response
+
+#### Login
+- HTTP API designed by REST principles
+- public endpoint
+- POST `api/v1/users/login`
+- scenarios
+  - success scenario
+    - in request send with email and password
+    - get password from database by email
+    - hash password from request and compare with password in db
+    - generate JWT token containing userID, issued at and expiration timestamp
+    - receive Bearer token in response header
+  - fail scenarios
+    - in case of invalid request, respond with 400
+    - in case of invalid credentials (non-registered email, invalid email x password match), receive 401 response
+
+### Newsletter
+#### Create newsletter
+- HTTP API designed by REST principles
+- secured endpoint
+- POST `api/v1/newsletters`
+- scenarios
+  - success scenario
+    - use Bearer token for auth in Authorization header
+    - in request send name and description
+    - create unique UUID for newsletter identification
+    - save to postgres
+  - fail scenarios
+    - in case of invalid request, receive 400
+    - in case user is not found in db, respond with 401
+
+#### Get newsletter by user
+- HTTP API designed by REST principles
+- secured endpoint
+- paginated
+- GET `api/v1/newsletters`
+- success scenario
+  - use Bearer token for auth in Authorization header
+  - retrieve paginated list of newsletters by user id in token
+- fail scenario
+  - in case of invalid request, receive 400
+
+### Subscriptions
+#### Get newsletter by subscriber email
+- HTTP API designed by REST principles
+- public endpoint
+- paginated
+- GET `api/v1/subscribers/:email/newsletters`
+- success scenario
+  - in path parameter send subscriber email
+  - retrieve paginated list of newsletters by email
+- fail scenario
+  - in case of invalid request, receive 400
+
+#### Subscribe to newsletter
+- HTTP API designed by REST principles
+- public endpoint
+- POST `api/v1/newsletters/:newsletter_public_id/subscriptions`
+- success scenario
+  - in path parameter send newsletter public id
+
+#### Unsubscribe from newsletter
+- HTTP API designed by REST principles
+- public endpoint
+- DELETE `api/v1/newsletters/:newsletter_public_id/subscriptions/:email`
+- success scenario
+  - in path parameter send newsletter public id and email
 
 ## Flows
-- TODO
+- registrations
+  - register endpoint
+- login
+  - login endpoint
+- create newsletter
+  - register / login
+  - create newsletter endpoint
+- get user newsletters
+  - register / login
+  - create newsletter endpoint
+  - get user newsletters endpoint
+- subscribe to newsletter
+  - subscribe endpoint
+- get subscribed newsletters
+  - subscribe endpoint
+  - get subscribed newsletters
+    - http endpoint to get newsletters by email
+    - firebase get public IDS + http endpoint to get newsletters by public ID 
+- unsubscribe from newsletter
+  - unsubscribe endpoint
+
+## TODOS for PROD
+- system tests (func, unit, integration)
+  - jwt token
+    - expiration
+    - malformed
+  - all happy paths + application errors
+- infrastructure
+  - build binary
+  - digital ocean VPS
+  - DB? either droplet or run in docker compose
+  - setup firebase project permissions dev/prod
+  - envs
+  - secrets
+    - firebase service account key
+    - sendgrid api key
+    - jwt
+  - ssl/tls
+  - domain
+  - tagging
+  - zero downtime deploy
+  - reverse proxy with rate limiting
+  - github actions
+    - lint
+    - vulnerability check
+    - build
+    - test
+    - deploy
+- features
+  - unsubscription link
+  - unique code to pair together subscription and unsubscription links
+## TODOS extras
+- basic performance test
+- simple backoffice
+- replace GET http endpoints with one public and one private graphql
+- improve project structure
 
 ## Development plan
 - Setup project via docker compose ✅
   - go app ✅
   - postgre ✅
   - firebase ✅
-    - configure SDK
-  - email server
+    - configure SDK ✅
+  - email server ✅
 - air hot rebuild in local env ✅
-- Setup other dependencies
-  - email server
-    - SendGrid or AWS SES
+- Setup other dependencies ✅
+  - email server ✅
+    - SendGrid or AWS SES ✅
 - db migrations
   - structures  ✅
-  - data 
+  - data - not necessary ✅
 - MVP go app
   - REST
     - user registration ✅
@@ -34,38 +182,33 @@
     - user authorization ✅
     - newsletter management ✅
     - subscription management ✅
-    - link
-      - endpoint na subscribe ktery prijme public newsletter id a email subscribera WIP
-    - email functionality
-    - api documentation - swagger
+    - endpoint na subscribe ktery prijme public newsletter id a email subscribera WIP  ✅
+    - email functionality ✅
+      - queue ✅
+      - disable for development env ✅ 
+    - api documentation - swagger ✅
       - definition ✅  
-      - test if works
-      - double check
+      - test if works ✅
     - healthcheck ✅
-      - pg
-      - firebase
-      - email handler
-    - graceful shutdown
       - pg ✅
-      - firebase
-      - email handler
-    - logs ✅
+    - graceful shutdown ✅
+      - pg ✅
+    - logs `✅`
     - panic recovery ✅
     - security
-      - rate limiting ????
+      - rate limiting
       - cors ✅
     - pagination ✅
     - handle errors ✅
       - registration : invalid password or email ✅
       - registration with same email ✅
     - verify timeouts in infra ✅
-    - 
   - testing
     - system tests (func, unit, integration)
     - jwt token
-      - expirace
-      - spatny format
-    - podle aplikacnich erroru
+      - expiration
+      - malformed
+    - all happy paths + application errors
 - FIX
   - check volumes ✅
 - deployment
@@ -81,66 +224,11 @@
   - zero downtime redeploy?
 - predani
   - readme
-    - functionality overview
+    - functionality overview ✅ 
     - setup ✅
     - link to api docs ✅
-    - architecture decisions?
-    - future improvements?
+    - architecture decisions? ✅
+    - future improvements? ✅
     - popis flows
-- EXTRA
-  - basic performance test
-  - CI (github actions lint / build / deploy)
-  - simple backoffice
-  - graphql
-- LINKY
-  Editor creates a newsletter
-  System generates a unique subscription link for the newsletter
-  Editor shares the unique subscription link
-  User clicks on the unique link
-  System verifies the link's validity
-  User is presented with a form to enter their email
-  User submits their email
-  System checks if the email is already subscribed to this newsletter
-  If not subscribed, system adds the email to Firebase as a new subscriber
-  System sends a confirmation email to the subscriber
-
-## Data layer
-- pagination
-- postgres
-- user
-CREATE TABLE users (
-id SERIAL PRIMARY KEY,
-email VARCHAR(255) UNIQUE NOT NULL,
-password_hash VARCHAR(255) NOT NULL,
-created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-- news
-CREATE TABLE newsletters (
-id SERIAL PRIMARY KEY,
-firebase_id VARCHAR(255) UNIQUE NOT NULL,
-user_id INTEGER REFERENCES users(id),
-name VARCHAR(255) NOT NULL,
-created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-- links
-  CREATE TABLE subscription_links (
-  id SERIAL PRIMARY KEY,
-  newsletter_id INTEGER REFERENCES newsletters(id),
-  unique_token VARCHAR(64) UNIQUE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP WITH TIME ZONE
-  );
 
 
-- firebase = realtime database
-subscriptions/
-├── {subscriberEmail}/
-│   ├── {newsletterId1}: true
-│   ├── {newsletterId2}: true
-│   └── ...
-
-newsletters/
-├── {newsletterId}/
-│   ├── name: string
-│   ├── description: string
-│   ├── createdAt: timestamp

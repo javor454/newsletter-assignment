@@ -21,5 +21,15 @@ CREATE TABLE subscriptions (
     subscriber_email VARCHAR(255) NOT NULL,
     newsletter_id UUID REFERENCES newsletters(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    disabled_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     UNIQUE (subscriber_email, newsletter_id)
-)
+);
+
+CREATE TABLE email_jobs (
+    id UUID PRIMARY KEY,
+    message_type VARCHAR(50) NOT NULL,
+    params JSONB NOT NULL,
+    sent BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

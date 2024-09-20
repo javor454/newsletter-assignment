@@ -92,17 +92,14 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Successfully retrieved newsletters by user ID"
+                    "200": {
+                        "description": "Successfully retrieved newsletters by user ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.InternalNewsletter"
+                        }
                     },
                     "400": {
                         "description": "Invalid request with detail",
-                        "schema": {
-                            "$ref": "#/definitions/response.Error"
-                        }
-                    },
-                    "409": {
-                        "description": "Already subscribed to newsletter",
                         "schema": {
                             "$ref": "#/definitions/response.Error"
                         }
@@ -154,11 +151,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/response.Error"
                         }
                     },
-                    "404": {
-                        "description": "Unknown user",
-                        "schema": {
-                            "$ref": "#/definitions/response.Error"
-                        }
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Unexpected exception"
@@ -166,10 +160,10 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/newsletters/{newsletter_public_id}/subscriptions": {
+        "/api/v1/newsletters/{newsletter_public_id}/subscribe": {
             "post": {
                 "tags": [
-                    "newsletter"
+                    "public subscription"
                 ],
                 "summary": "SubscribeToNewsletter - used to subscribe to newsletter by email",
                 "parameters": [
@@ -178,14 +172,6 @@ const docTemplate = `{
                         "default": "application/json",
                         "description": "application/json",
                         "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "Bearer",
-                        "description": "Bearer \u003ctoken\u003e",
-                        "name": "Authorization",
                         "in": "header",
                         "required": true
                     },
@@ -234,10 +220,104 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/newsletters/{newsletter_public_id}/unsubscribe/{email}": {
+            "delete": {
+                "tags": [
+                    "public subscription"
+                ],
+                "summary": "UnsubscribeNewsletter - used to unsubscribe from newsletter by email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "application/json",
+                        "description": "application/json",
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Public newsletter identifier",
+                        "name": "newsletter_public_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Subscriber email address",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successfully unsubscribed from newsletter"
+                    },
+                    "400": {
+                        "description": "Invalid request with detail",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "404": {
+                        "description": "Newsletter not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected exception"
+                    }
+                }
+            }
+        },
+        "/api/v1/newsletters/{public_id}": {
+            "get": {
+                "tags": [
+                    "public newsletter"
+                ],
+                "summary": "GetNewsletterByUserID - retrieve newsletter by its public ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "application/json",
+                        "description": "application/json",
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Newsletter public ID",
+                        "name": "public_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved newsletter by public ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.PublicNewsletter"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request with detail",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected exception"
+                    }
+                }
+            }
+        },
         "/api/v1/subscribers/{email}/newsletters": {
             "get": {
                 "tags": [
-                    "public subscriber"
+                    "public subscription"
                 ],
                 "summary": "GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's email",
                 "parameters": [
@@ -276,7 +356,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "Successfully retrieved newsletters by subscriber email"
                     },
                     "400": {
@@ -451,7 +531,8 @@ const docTemplate = `{
                     }
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "healthy"
                 }
             }
         },
@@ -459,10 +540,58 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "postgres"
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "healthy"
+                }
+            }
+        },
+        "response.InternalNewsletter": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-09-20T23:16:32Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Some descriptive description"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "1541c9c1-e43e-4527-850a-77f4e5be9599"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Newsletter name"
+                },
+                "public_id": {
+                    "type": "string",
+                    "example": "90c0a606-4429-44cc-9531-6f9cd038620a"
+                }
+            }
+        },
+        "response.PublicNewsletter": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-09-20T23:16:32Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Some descriptive description"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Newsletter name"
+                },
+                "public_id": {
+                    "type": "string",
+                    "example": "90c0a606-4429-44cc-9531-6f9cd038620a"
                 }
             }
         }

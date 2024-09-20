@@ -45,8 +45,10 @@ func (o *GetNewslettersBySubscriberEmail) Execute(
 
 	var totalItems int
 	if err := o.pgConn.QueryRowContext(ctx, countQuery, p.Email).Scan(&totalItems); err != nil {
-		return nil, nil, fmt.Errorf("failed to get total count: %s", err.Error())
+		return nil, nil, fmt.Errorf("failed to get total count: %w", err)
 	}
+
+	// TODO: could return here in case totalItems = 0
 
 	totalPages := int(math.Ceil(float64(totalItems) / float64(p.PageSize)))
 
@@ -54,7 +56,7 @@ func (o *GetNewslettersBySubscriberEmail) Execute(
 
 	rows, err := o.pgConn.QueryContext(ctx, query, p.Email, p.PageSize, offset)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get newsletters by user id: %s", err.Error())
+		return nil, nil, fmt.Errorf("failed to get newsletters by user id: %w", err)
 	}
 
 	newsletters := make([]*row.Newsletter, 0, p.PageSize)
@@ -63,17 +65,17 @@ func (o *GetNewslettersBySubscriberEmail) Execute(
 		var r row.Newsletter
 		if err := rows.Scan(&r.ID, &r.PublicID, &r.Name, &r.Description, &r.CreatedAt); err != nil {
 			if err := rows.Close(); err != nil {
-				return nil, nil, fmt.Errorf("failed to close rows: %s", err.Error())
+				return nil, nil, fmt.Errorf("failed to close rows: %w", err)
 			}
 
-			return nil, nil, fmt.Errorf("failed to scan row: %s", err.Error())
+			return nil, nil, fmt.Errorf("failed to scan row on get newsletter by subscriber: %w", err)
 		}
 
 		newsletters = append(newsletters, &r)
 	}
 
 	if err := rows.Close(); err != nil {
-		return nil, nil, fmt.Errorf("failed to close rows: %s", err.Error())
+		return nil, nil, fmt.Errorf("failed to close rows: %w", err)
 	}
 
 	return newsletters, dto.NewPagination(p.PageNumber, p.PageSize, totalPages, totalItems), nil

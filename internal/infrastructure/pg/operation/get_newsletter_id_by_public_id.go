@@ -36,7 +36,7 @@ func (o *GetNewsletterIDByPublicID) Execute(ctx context.Context, p *GetNewslette
 			return nil, application.NewsletterNotFoundError
 		}
 
-		return nil, fmt.Errorf("failed to get id by public id: %s", err.Error())
+		return nil, fmt.Errorf("failed to get id by public id: %w", err)
 	}
 
 	return &res, nil

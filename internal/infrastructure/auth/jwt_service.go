@@ -23,13 +23,13 @@ func (j *JwtService) Generate(user *domain.User) (*dto.Token, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["sub"] = user.ID().String()
-	claims["iss"] = "newsletter-assignment" // TODO: url better? from env probably
+	claims["iss"] = "newsletter-assignment" // TODO (nice2have): url better? from env probably
 	claims["iat"] = time.Now().Unix()
 	claims["exp"] = time.Now().Add(1 * time.Hour).Unix()
 
 	tokenStr, err := token.SignedString([]byte(j.secret))
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign token: %s", err.Error())
+		return nil, fmt.Errorf("failed to sign token: %w", err)
 	}
 
 	return dto.NewToken(tokenStr), nil
@@ -44,7 +44,7 @@ func (j *JwtService) ParseToken(tokenStr string) (string, error) {
 		return []byte(j.secret), nil
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to parse token: %s", err.Error())
+		return "", fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)

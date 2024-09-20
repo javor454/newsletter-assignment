@@ -23,7 +23,7 @@ func NewConnection(conf *config.PostgresConfig) (*sql.DB, error) {
 		),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("[PG] Error connecting: %s", err.Error())
+		return nil, fmt.Errorf("[PG] Error connecting: %w", err)
 	}
 
 	db.SetMaxOpenConns(25) // TODO: env
@@ -31,7 +31,7 @@ func NewConnection(conf *config.PostgresConfig) (*sql.DB, error) {
 	db.SetConnMaxLifetime(5 * time.Minute)
 
 	if err = db.Ping(); err != nil {
-		return nil, fmt.Errorf("[PG] Failed to ping: %s", err.Error())
+		return nil, fmt.Errorf("[PG] Failed to ping: %w", err)
 	}
 
 	return db, nil

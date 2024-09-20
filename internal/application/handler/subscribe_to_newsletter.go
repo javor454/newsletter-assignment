@@ -10,20 +10,14 @@ type SubscribeToNewsletterRepository interface {
 	Subscribe(ctx context.Context, subscription *domain.Subscription) error
 }
 
-type SubscribeToNewsletterCache interface {
-	CacheSubscription(ctx context.Context, subscription *domain.Subscription) error
-}
-
 type SubscribeToNewsletterHandler struct {
 	subscribeToNewsletter SubscribeToNewsletterRepository
-	subscriptionCache     SubscribeToNewsletterCache
 }
 
 func NewSubscribeToNewsletterHandler(
 	stn SubscribeToNewsletterRepository,
-	sc SubscribeToNewsletterCache,
 ) *SubscribeToNewsletterHandler {
-	return &SubscribeToNewsletterHandler{subscribeToNewsletter: stn, subscriptionCache: sc}
+	return &SubscribeToNewsletterHandler{subscribeToNewsletter: stn}
 }
 
 func (r *SubscribeToNewsletterHandler) Handle(ctx context.Context, newsletterPublicID, email string) error {
@@ -38,10 +32,6 @@ func (r *SubscribeToNewsletterHandler) Handle(ctx context.Context, newsletterPub
 
 	subscription := domain.NewSubscription(pubID, emailVo)
 	if err := r.subscribeToNewsletter.Subscribe(ctx, subscription); err != nil {
-		return err
-	}
-
-	if err := r.subscriptionCache.CacheSubscription(ctx, subscription); err != nil {
 		return err
 	}
 

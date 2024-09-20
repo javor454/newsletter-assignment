@@ -9,6 +9,7 @@ import (
 	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/app/pg"
+	"github.com/javor454/newsletter-assignment/app/sendgrid"
 	"github.com/javor454/newsletter-assignment/app/shutdown"
 	"github.com/javor454/newsletter-assignment/internal"
 	"github.com/spf13/viper"
@@ -53,8 +54,15 @@ func main() {
 	lg.Info("[PG] Connected")
 
 	lg.Debug("[FIREBASE] Connecting...")
-	fbClient, err := firebase.NewClient(rootCtx, fbConfig, lg)
+	fbClient, err := firebase.NewClient(rootCtx, fbConfig)
 	lg.Info("[FIREBASE] Connected")
+
+	lg.Debug("[SENDGRID] Creating client...")
+	mailClient := sendgrid.NewClient(appConfig)
+	if err != nil {
+		lg.Fatal(err)
+	}
+	lg.Info("[SENDGRID] Created")
 
 	lg.Debug("[MIGRATIONS] Starting up...")
 	if err := pg.MigrationsUp(pgConn); err != nil {
@@ -64,9 +72,9 @@ func main() {
 
 	lg.Debug("[HTTP] Creating server...")
 	httpServer := http_server.NewServer(lg, appConfig)
-	lg.Debug("[HTTP] Server created")
+	lg.Info("[HTTP] Server created")
 
-	internal.RegisterDependencies(httpServer, lg, pgConn, appConfig, fbClient)
+	internal.RegisterDependencies(rootCtx, lg, appConfig, pgConn, httpServer, mailClient, fbClient)
 
 	lg.Debug("[HTTP] Running server...")
 	ginErrChan := httpServer.RunGinServer(appConfig.HttpPort)

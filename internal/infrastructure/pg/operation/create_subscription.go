@@ -9,21 +9,14 @@ import (
 	"github.com/javor454/newsletter-assignment/internal/application"
 )
 
-type CreateSubscription struct {
-	pgConn *sql.DB
-}
-
 type CreateSubscriptionParams struct {
 	ID              string
 	SubscriberEmail string
 	NewsletterID    string
 }
 
-func NewCreateSubscription(pgConn *sql.DB) *CreateSubscription {
-	return &CreateSubscription{pgConn: pgConn}
-}
-
-func (o *CreateSubscription) Execute(ctx context.Context, p *CreateSubscriptionParams) error {
+// TODO: get newsletter ID can be probably merged with this
+func CreateSubscriptionTx(ctx context.Context, tx *sql.Tx, p *CreateSubscriptionParams) error {
 	const (
 		duplicitSubscriptionConstraint = "subscriptions_subscriber_email_newsletter_id_key"
 		query                          = `
@@ -31,14 +24,14 @@ func (o *CreateSubscription) Execute(ctx context.Context, p *CreateSubscriptionP
 			VALUES ($1, $2, $3);
 		`
 	)
-	// TODO: dont allow duplicit
-	_, err := o.pgConn.ExecContext(ctx, query, p.ID, p.SubscriberEmail, p.NewsletterID)
+	_, err := tx.ExecContext(ctx, query, p.ID, p.SubscriberEmail, p.NewsletterID)
 	if err != nil {
+		// TODO: vyzkouset duplicitni subscribe
 		if strings.Contains(err.Error(), duplicitSubscriptionConstraint) {
 			return application.AlreadySubscibedToNewsletterError
 		}
 
-		return fmt.Errorf("failed to create subscription: %s", err.Error())
+		return fmt.Errorf("failed to create subscription: %w", err)
 	}
 
 	return nil

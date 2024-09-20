@@ -12,6 +12,9 @@ const (
 	envCorsAllowedOrigins = "CONFIG_CORS_ALLOWED_ORIGINS"
 	envCorsAllowedHeaders = "CONFIG_CORS_ALLOWED_HEADERS"
 	envTimezone           = "CONFIG_TIMEZONE"
+	envSendGridApiKey     = "CONFIG_SENDGRID_API_KEY"
+	envSendGridTemplateID = "CONFIG_SENDGRID_TEMPLATE_ID"
+	envSendMail           = "CONFIG_SEND_MAIL"
 )
 
 type AppConfig struct {
@@ -21,6 +24,9 @@ type AppConfig struct {
 	CorsAllowedOrigins []string
 	CorsAllowedHeaders []string
 	Timezone           string
+	SendGridApiKey     string
+	SendGridTemplateID string
+	SendMail           bool
 }
 
 func CreateAppConfig() (*AppConfig, error) {
@@ -52,6 +58,15 @@ func CreateAppConfig() (*AppConfig, error) {
 	if timezone == "" {
 		return nil, getMissingError(envTimezone)
 	}
+	sendGridApiKey := viper.GetString(envSendGridApiKey)
+	if sendGridApiKey == "" {
+		return nil, getMissingError(envSendGridApiKey)
+	}
+	sendGridTemplateID := viper.GetString(envSendGridTemplateID)
+	if sendGridTemplateID == "" {
+		return nil, getMissingError(envSendGridTemplateID)
+	}
+	sendMail := viper.GetBool(envSendMail)
 
 	return &AppConfig{
 		HttpPort:           httpPort,
@@ -60,5 +75,8 @@ func CreateAppConfig() (*AppConfig, error) {
 		CorsAllowedOrigins: corsAllowedOrigins,
 		CorsAllowedHeaders: corsAllowedHeaders,
 		Timezone:           timezone,
+		SendGridApiKey:     sendGridApiKey,
+		SendGridTemplateID: sendGridTemplateID,
+		SendMail:           sendMail,
 	}, nil
 }

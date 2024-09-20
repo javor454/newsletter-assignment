@@ -44,13 +44,49 @@ definitions:
           $ref: '#/definitions/response.Indicator'
         type: array
       status:
+        example: healthy
         type: string
     type: object
   response.Indicator:
     properties:
       name:
+        example: postgres
         type: string
       status:
+        example: healthy
+        type: string
+    type: object
+  response.InternalNewsletter:
+    properties:
+      created_at:
+        example: "2024-09-20T23:16:32Z"
+        type: string
+      description:
+        example: Some descriptive description
+        type: string
+      id:
+        example: 1541c9c1-e43e-4527-850a-77f4e5be9599
+        type: string
+      name:
+        example: Newsletter name
+        type: string
+      public_id:
+        example: 90c0a606-4429-44cc-9531-6f9cd038620a
+        type: string
+    type: object
+  response.PublicNewsletter:
+    properties:
+      created_at:
+        example: "2024-09-20T23:16:32Z"
+        type: string
+      description:
+        example: Some descriptive description
+        type: string
+      name:
+        example: Newsletter name
+        type: string
+      public_id:
+        example: 90c0a606-4429-44cc-9531-6f9cd038620a
         type: string
     type: object
 info:
@@ -110,14 +146,12 @@ paths:
         required: true
         type: integer
       responses:
-        "201":
+        "200":
           description: Successfully retrieved newsletters by user ID
+          schema:
+            $ref: '#/definitions/response.InternalNewsletter'
         "400":
           description: Invalid request with detail
-          schema:
-            $ref: '#/definitions/response.Error'
-        "409":
-          description: Already subscribed to newsletter
           schema:
             $ref: '#/definitions/response.Error'
         "500":
@@ -152,28 +186,20 @@ paths:
           description: Invalid request with detail
           schema:
             $ref: '#/definitions/response.Error'
-        "404":
-          description: Unknown user
-          schema:
-            $ref: '#/definitions/response.Error'
+        "401":
+          description: Unauthorized
         "500":
           description: Unexpected exception
       summary: Create - used to create new newsletter
       tags:
       - newsletter
-  /api/v1/newsletters/{newsletter_public_id}/subscriptions:
+  /api/v1/newsletters/{newsletter_public_id}/subscribe:
     post:
       parameters:
       - default: application/json
         description: application/json
         in: header
         name: Content-Type
-        required: true
-        type: string
-      - default: Bearer
-        description: Bearer <token>
-        in: header
-        name: Authorization
         required: true
         type: string
       - description: Public newsletter identifier
@@ -206,7 +232,70 @@ paths:
           description: Unexpected exception
       summary: SubscribeToNewsletter - used to subscribe to newsletter by email
       tags:
-      - newsletter
+      - public subscription
+  /api/v1/newsletters/{newsletter_public_id}/unsubscribe/{email}:
+    delete:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - description: Public newsletter identifier
+        in: path
+        name: newsletter_public_id
+        required: true
+        type: string
+      - description: Subscriber email address
+        in: path
+        name: email
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Successfully unsubscribed from newsletter
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Newsletter not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: UnsubscribeNewsletter - used to unsubscribe from newsletter by email
+      tags:
+      - public subscription
+  /api/v1/newsletters/{public_id}:
+    get:
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - description: Newsletter public ID
+        in: path
+        name: public_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successfully retrieved newsletter by public ID
+          schema:
+            $ref: '#/definitions/response.PublicNewsletter'
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: GetNewsletterByUserID - retrieve newsletter by its public ID
+      tags:
+      - public newsletter
   /api/v1/subscribers/{email}/newsletters:
     get:
       parameters:
@@ -236,7 +325,7 @@ paths:
         required: true
         type: string
       responses:
-        "201":
+        "200":
           description: Successfully retrieved newsletters by subscriber email
         "400":
           description: Invalid request with detail
@@ -247,7 +336,7 @@ paths:
       summary: GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's
         email
       tags:
-      - public subscriber
+      - public subscription
   /api/v1/users/login:
     post:
       parameters:

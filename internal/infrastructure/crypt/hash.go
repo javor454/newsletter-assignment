@@ -14,7 +14,7 @@ type BcryptHash struct {
 func NewBcryptHashFromPassword(password *domain.Password) (*BcryptHash, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password.String()), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %s", err.Error())
+		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	return &BcryptHash{

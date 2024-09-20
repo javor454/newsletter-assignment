@@ -43,7 +43,7 @@ func (o *CreateNewsletter) Execute(ctx context.Context, p *CreateNewsletterParam
 			return application.UnknownUserError
 		}
 
-		return fmt.Errorf("failed to create newsletter: %s", err.Error())
+		return fmt.Errorf("failed to create newsletter: %w", err)
 	}
 
 	return nil

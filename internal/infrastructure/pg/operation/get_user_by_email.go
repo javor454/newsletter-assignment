@@ -40,7 +40,7 @@ func (o *GetUserByEmail) Execute(ctx context.Context, p *GetUserByEmailParams) (
 			return nil, application.UserNotFoundError
 		}
 
-		return nil, fmt.Errorf("failed to get user by email: %s", err.Error())
+		return nil, fmt.Errorf("failed to get user by email: %w", err)
 	}
 
 	return &res, nil

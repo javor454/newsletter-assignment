@@ -91,7 +91,7 @@ func (s *Server) RunGinServer(port int) chan error {
 	go func() {
 		// don't block startup with server init
 		if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errChan <- fmt.Errorf("[GIN] Server error: %s", err.Error())
+			errChan <- fmt.Errorf("[GIN] Server error: %w", err)
 		}
 	}()
 

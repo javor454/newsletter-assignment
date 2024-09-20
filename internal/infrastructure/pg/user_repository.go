@@ -60,7 +60,7 @@ func (u *UserRepository) GetByEmailAndPassword(
 
 	id, err := domain.CreateIDFromExisting(res.ID)
 	if err != nil {
-		return nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+		return nil, fmt.Errorf("invalid uuid format in db %w", err)
 	}
 	bcryptHash := crypt.CreateHashFromExisting(res.PasswordHash)
 	if !bcryptHash.IsEqual(pass) {

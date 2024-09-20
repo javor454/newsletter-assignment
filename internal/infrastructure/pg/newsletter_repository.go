@@ -14,17 +14,20 @@ type NewsletterRepository struct {
 	createNewsletter                *operation.CreateNewsletter
 	getNewslettersByUserID          *operation.GetNewslettersByUserID
 	getNewslettersBySubscriberEmail *operation.GetNewslettersBySubscriberEmail
+	getNewsletterByPublicID         *operation.GetNewslettersByPublicID
 }
 
 func NewNewsletterRepository(
 	cn *operation.CreateNewsletter,
 	gn *operation.GetNewslettersByUserID,
 	gns *operation.GetNewslettersBySubscriberEmail,
+	gnbpi *operation.GetNewslettersByPublicID,
 ) *NewsletterRepository {
 	return &NewsletterRepository{
 		createNewsletter:                cn,
 		getNewslettersByUserID:          gn,
 		getNewslettersBySubscriberEmail: gns,
+		getNewsletterByPublicID:         gnbpi,
 	}
 }
 
@@ -63,19 +66,17 @@ func (u *NewsletterRepository) GetBySubscriberEmail(ctx context.Context, email *
 	for _, row := range rows {
 		id, err := domain.CreateIDFromExisting(row.ID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+			return nil, nil, fmt.Errorf("invalid uuid format in db %w", err)
 		}
 		publicID, err := domain.CreateIDFromExisting(row.PublicID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+			return nil, nil, fmt.Errorf("invalid uuid format in db %w", err)
 		}
 		newsletters = append(newsletters, domain.CreateNewsletterFromExisting(id, publicID, row.Name, row.Description, row.CreatedAt))
 	}
 
 	return newsletters, pagination, nil
 }
-
-// TODO: test for nonexistent user id
 
 func (u *NewsletterRepository) GetByUserID(ctx context.Context, userID *domain.ID, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error) {
 	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond) // TODO: scale with pageSize?
@@ -94,14 +95,44 @@ func (u *NewsletterRepository) GetByUserID(ctx context.Context, userID *domain.I
 	for _, row := range rows {
 		id, err := domain.CreateIDFromExisting(row.ID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+			return nil, nil, fmt.Errorf("invalid uuid format in db %w", err)
 		}
 		publicID, err := domain.CreateIDFromExisting(row.PublicID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid uuid format in db %s", err.Error())
+			return nil, nil, fmt.Errorf("invalid uuid format in db %w", err)
 		}
 		newsletters = append(newsletters, domain.CreateNewsletterFromExisting(id, publicID, row.Name, row.Description, row.CreatedAt))
 	}
 
 	return newsletters, pagination, nil
+}
+
+func (u *NewsletterRepository) GetByPublicID(ctx context.Context, publicID *domain.ID) (*domain.Newsletter, error) {
+	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	defer cancel()
+
+	row, err := u.getNewsletterByPublicID.Execute(ctx, &operation.GetNewslettersByPublicIDParams{
+		PublicID: publicID.String(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := domain.CreateIDFromExisting(row.ID)
+	if err != nil {
+		return nil, err
+	}
+	publicID, err = domain.CreateIDFromExisting(row.PublicID)
+	if err != nil {
+		return nil, err
+	}
+
+	return domain.CreateNewsletterFromExisting(
+		id,
+		publicID,
+		row.Name,
+		row.Description,
+		row.CreatedAt,
+	), nil
+
 }

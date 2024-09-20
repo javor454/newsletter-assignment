@@ -15,12 +15,12 @@ import (
 func MigrationsUp(pgConn *sql.DB) error {
 	driver, err := postgres.WithInstance(pgConn, &postgres.Config{})
 	if err != nil {
-		return fmt.Errorf("failed to create database driver: %s", err.Error())
+		return fmt.Errorf("failed to create database driver: %w", err)
 	}
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get current working directory: %s", err.Error())
+		return fmt.Errorf("failed to get current working directory: %w", err)
 	}
 
 	migrationsPath := filepath.Join(cwd, "migrations")
@@ -33,11 +33,11 @@ func MigrationsUp(pgConn *sql.DB) error {
 		fmt.Sprintf("file://%s", migrationsPath),
 		"postgres", driver)
 	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %s", err.Error())
+		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
 
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return fmt.Errorf("failed to run migrations: %s", err.Error())
+		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
 	return nil
