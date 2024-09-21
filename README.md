@@ -88,6 +88,16 @@
 - fail scenario
   - in case of invalid request, receive 400
 
+#### Get newsletter by public ID
+- HTTP API designed by REST principles
+- public endpoint
+- GET `api/v1/newsletters/:public_id`
+- success scenario
+  - in path parameter send public ID
+  - retrieve newsletter by public ID
+- fail scenario
+  - in case of invalid request, receive 400
+
 #### Subscribe to newsletter
 - HTTP API designed by REST principles
 - public endpoint
@@ -120,7 +130,7 @@
   - subscribe endpoint
   - get subscribed newsletters
     - http endpoint to get newsletters by email
-    - firebase get public IDS + http endpoint to get newsletters by public ID 
+    - firebase get public IDS + http endpoint to get newsletter by public ID 
 - unsubscribe from newsletter
   - unsubscribe endpoint
 
@@ -154,6 +164,8 @@
 - features
   - unsubscription link
   - unique code to pair together subscription and unsubscription links
+  - rework `api/v1/newsletters/:public_id` to accept multiple public IDS to support firebase
+
 ## TODOS extras
 - basic performance test
 - simple backoffice
