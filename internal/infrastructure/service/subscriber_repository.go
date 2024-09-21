@@ -86,7 +86,7 @@ func (s *SubscriberRepository) Subscribe(ctx context.Context, subscription *doma
 		return fmt.Errorf("error beginning transaction: %w", err)
 	}
 
-	if err := operation.CreateSubscriptionTx(ctx, tx, &operation.CreateSubscriptionParams{
+	if err := operation.CreateOrUpdateSubscriptionTx(ctx, tx, &operation.CreateSubscriptionParams{
 		ID:              subscription.ID().String(),
 		SubscriberEmail: subscription.Email().String(),
 		NewsletterID:    idRow.ID,

@@ -51,14 +51,14 @@ func NewUserController(
 //	@Summary	Register - Register user
 //	@Router		/api/v1/users/register [post]
 //	@Tags		public user
+//	@Produce	json
 //
-//	@Param		Content-Type	header	string						true	"application/json"	default(application/json)
-//	@Param		data			body	request.RegisterUserRequest	true	"Data for registering user"
+//	@Param		data	body	request.RegisterUserRequest	true	"Data for registering user"
 //
-//	@Success	201				"User was successfully registered"
-//	@Failure	400				{object}	response.Error	"Invalid request with detail"
-//	@Failure	409				{object}	response.Error	"Email taken"
-//	@Failure	500				"Unexpected exception"
+//	@Success	201		"User was successfully registered"
+//	@Failure	400		{object}	response.Error	"Invalid request with detail"
+//	@Failure	409		{object}	response.Error	"Email taken"
+//	@Failure	500		"Unexpected exception"
 func (u *UserController) Register(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {
@@ -106,14 +106,14 @@ func (u *UserController) Register(ctx *gin.Context) {
 //	@Summary	Login - Login user
 //	@Router		/api/v1/users/login [post]
 //	@Tags		public user
+//	@Produce	json
 //
-//	@Param		Content-Type	header	string						true	"application/json"	default(application/json)
-//	@Param		data			body	request.RegisterUserRequest	true	"Data for user login"
+//	@Param		data	body	request.RegisterUserRequest	true	"Data for user login"
 //
-//	@Success	201				"User successfully logged in"
-//	@Failure	400				{object}	response.Error	"Invalid request with detail"
-//	@Failure	401				{object}	response.Error	"Invalid credentials"
-//	@Failure	500				"Unexpected exception"
+//	@Success	201		"User successfully logged in"
+//	@Failure	400		{object}	response.Error	"Invalid request with detail"
+//	@Failure	401		{object}	response.Error	"Invalid credentials"
+//	@Failure	500		"Unexpected exception"
 func (u *UserController) Login(ctx *gin.Context) {
 	var h *request.ContentTypeHeader
 	if err := ctx.ShouldBindHeader(&h); err != nil {

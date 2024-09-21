@@ -10,25 +10,25 @@ import (
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg/row"
 )
 
-type GetNewslettersBySubscriberEmail struct {
+type GetNewslettersBySubscriptionEmail struct {
 	pgConn *sql.DB
 }
 
-type GetNewslettersBySubscriberEmailParams struct {
+type GetNewslettersBySubscriptionEmailParams struct {
 	Email      string
 	PageSize   int
 	PageNumber int
 }
 
-func NewGetNewslettersBySubscriberEmail(pgConn *sql.DB) *GetNewslettersBySubscriberEmail {
-	return &GetNewslettersBySubscriberEmail{
+func NewGetNewslettersBySubscriptionEmail(pgConn *sql.DB) *GetNewslettersBySubscriptionEmail {
+	return &GetNewslettersBySubscriptionEmail{
 		pgConn: pgConn,
 	}
 }
 
-func (o *GetNewslettersBySubscriberEmail) Execute(
+func (o *GetNewslettersBySubscriptionEmail) Execute(
 	ctx context.Context,
-	p *GetNewslettersBySubscriberEmailParams,
+	p *GetNewslettersBySubscriptionEmailParams,
 ) ([]*row.Newsletter, *dto.Pagination, error) {
 	const countQuery = `
         SELECT COUNT(*) as c

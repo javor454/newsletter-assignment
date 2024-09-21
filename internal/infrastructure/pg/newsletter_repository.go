@@ -11,23 +11,23 @@ import (
 )
 
 type NewsletterRepository struct {
-	createNewsletter                *operation.CreateNewsletter
-	getNewslettersByUserID          *operation.GetNewslettersByUserID
-	getNewslettersBySubscriberEmail *operation.GetNewslettersBySubscriberEmail
-	getNewsletterByPublicID         *operation.GetNewslettersByPublicID
+	createNewsletter                  *operation.CreateNewsletter
+	getNewslettersByUserID            *operation.GetNewslettersByUserID
+	getNewslettersBySubscriptionEmail *operation.GetNewslettersBySubscriptionEmail
+	getNewsletterByPublicID           *operation.GetNewslettersByPublicID
 }
 
 func NewNewsletterRepository(
 	cn *operation.CreateNewsletter,
 	gn *operation.GetNewslettersByUserID,
-	gns *operation.GetNewslettersBySubscriberEmail,
+	gns *operation.GetNewslettersBySubscriptionEmail,
 	gnbpi *operation.GetNewslettersByPublicID,
 ) *NewsletterRepository {
 	return &NewsletterRepository{
-		createNewsletter:                cn,
-		getNewslettersByUserID:          gn,
-		getNewslettersBySubscriberEmail: gns,
-		getNewsletterByPublicID:         gnbpi,
+		createNewsletter:                  cn,
+		getNewslettersByUserID:            gn,
+		getNewslettersBySubscriptionEmail: gns,
+		getNewsletterByPublicID:           gnbpi,
 	}
 }
 
@@ -49,11 +49,11 @@ func (u *NewsletterRepository) Create(ctx context.Context, userID *domain.ID, ne
 	return nil
 }
 
-func (u *NewsletterRepository) GetBySubscriberEmail(ctx context.Context, email *domain.Email, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error) {
+func (u *NewsletterRepository) GetBySubscriptionEmail(ctx context.Context, email *domain.Email, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error) {
 	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
-	rows, pagination, err := u.getNewslettersBySubscriberEmail.Execute(ctx, &operation.GetNewslettersBySubscriberEmailParams{
+	rows, pagination, err := u.getNewslettersBySubscriptionEmail.Execute(ctx, &operation.GetNewslettersBySubscriptionEmailParams{
 		Email:      email.String(),
 		PageSize:   pageSize,
 		PageNumber: pageNumber,

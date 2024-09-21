@@ -7,19 +7,19 @@ import (
 	"github.com/javor454/newsletter-assignment/internal/domain"
 )
 
-type GetNewslettersBySubscriberEmail interface {
-	GetBySubscriberEmail(ctx context.Context, email *domain.Email, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error)
+type GetNewslettersBySubscriptionEmail interface {
+	GetBySubscriptionEmail(ctx context.Context, email *domain.Email, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error)
 }
 
-type GetNewslettersBySubscriberEmailHandler struct {
-	getNewslettersByUserID GetNewslettersBySubscriberEmail
+type GetNewslettersBySubscriptionEmailHandler struct {
+	getNewslettersBySubscriptionEmail GetNewslettersBySubscriptionEmail
 }
 
-func NewGetNewslettersBySubscriberEmailHandler(gnbui GetNewslettersBySubscriberEmail) *GetNewslettersBySubscriberEmailHandler {
-	return &GetNewslettersBySubscriberEmailHandler{getNewslettersByUserID: gnbui}
+func NewGetNewslettersBySubscriptionEmailHandler(gnbui GetNewslettersBySubscriptionEmail) *GetNewslettersBySubscriptionEmailHandler {
+	return &GetNewslettersBySubscriptionEmailHandler{getNewslettersBySubscriptionEmail: gnbui}
 }
 
-func (g *GetNewslettersBySubscriberEmailHandler) Handle(
+func (g *GetNewslettersBySubscriptionEmailHandler) Handle(
 	ctx context.Context,
 	email string,
 	pageSize, pageNumber int,
@@ -29,7 +29,7 @@ func (g *GetNewslettersBySubscriberEmailHandler) Handle(
 		return nil, nil, err
 	}
 
-	newsletters, pagination, err := g.getNewslettersByUserID.GetBySubscriberEmail(ctx, emailVo, pageSize, pageNumber)
+	newsletters, pagination, err := g.getNewslettersBySubscriptionEmail.GetBySubscriptionEmail(ctx, emailVo, pageSize, pageNumber)
 	if err != nil {
 		return nil, nil, err
 	}

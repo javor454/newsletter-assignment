@@ -39,10 +39,11 @@ func (c *HealthController) Liveness(ctx *gin.Context) {
 
 // Readiness
 //
-//	@Router		/api/health/readiness [get]
 //	@Summary	Readiness - determines if app is ready to receive traffic
+//	@Router		/api/health/readiness [get]
 //	@Tags		health
 //	@Produce	json
+//
 //	@Success	200	{object}	response.HealthStatus
 func (c *HealthController) Readiness(ctx *gin.Context) {
 	const (

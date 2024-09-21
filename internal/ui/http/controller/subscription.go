@@ -16,7 +16,7 @@ import (
 	"github.com/javor454/newsletter-assignment/internal/ui/http/response"
 )
 
-type GetNewslettersBySubscriberEmailHandler interface {
+type GetNewslettersBySubscriptionEmailHandler interface {
 	Handle(ctx context.Context, email string, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error)
 }
 
@@ -29,54 +29,55 @@ type UnsubscribeNewsletterHandler interface {
 }
 
 type SubscriptionController struct {
-	lg                                     logger.Logger
-	getNewslettersBySubscriberEmailHandler GetNewslettersBySubscriberEmailHandler
-	subscribeToNewsletter                  SubscribeToNewsletterHandler
-	unsubscribeNewsletterHandler           UnsubscribeNewsletterHandler
+	lg                                       logger.Logger
+	getNewslettersBySubscriptionEmailHandler GetNewslettersBySubscriptionEmailHandler
+	subscribeToNewsletter                    SubscribeToNewsletterHandler
+	unsubscribeNewsletterHandler             UnsubscribeNewsletterHandler
 }
 
 func NewSubscriptionController(
 	lg logger.Logger,
 	httpServer *http_server.Server,
-	gsnbeh GetNewslettersBySubscriberEmailHandler,
+	gsnbeh GetNewslettersBySubscriptionEmailHandler,
 	stnh SubscribeToNewsletterHandler,
 	unh UnsubscribeNewsletterHandler,
 ) *SubscriptionController {
 	controller := &SubscriptionController{
-		getNewslettersBySubscriberEmailHandler: gsnbeh,
-		lg:                                     lg,
-		unsubscribeNewsletterHandler:           unh,
-		subscribeToNewsletter:                  stnh,
+		getNewslettersBySubscriptionEmailHandler: gsnbeh,
+		lg:                                       lg,
+		unsubscribeNewsletterHandler:             unh,
+		subscribeToNewsletter:                    stnh,
 	}
 
-	httpServer.GetEngine().GET("api/v1/subscribers/:email/newsletters", controller.GetNewslettersBySubscriberEmail)
+	httpServer.GetEngine().GET("api/v1/subscriptions/:email/newsletters", controller.GetNewslettersBySubscriptionEmail)
 	httpServer.GetEngine().POST(
-		"api/v1/newsletters/:newsletter_public_id/subscribe",
+		"api/v1/newsletters/:newsletter_public_id/subscriptions",
 		controller.SubscribeToNewsletter,
 	)
 	httpServer.GetEngine().DELETE(
-		"api/v1/newsletters/:newsletter_public_id/subscribe/:email",
+		"api/v1/newsletters/:newsletter_public_id/subscriptions/:email",
 		controller.UnsubscribeNewsletter,
 	)
 
 	return controller
 }
 
-// GetNewslettersBySubscriberEmail
+// GetNewslettersBySubscriptionEmail
 //
-//	@Summary	GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's email
-//	@Router		/api/v1/subscribers/{email}/newsletters [get]
+//	@Summary	GetNewslettersBySubscriptionEmail - retrieve newsletter by subscriber's email
+//	@Router		/api/v1/subscriptions/{email}/newsletters [get]
 //	@Tags		public subscription
+//	@Produce	json
 //
 //	@Param		Content-Type	header	string	true	"application/json"			default(application/json)
 //	@Param		page_size		query	int		true	"Number of items on page"	default(10)	minimum(1)
 //	@Param		page_number		query	int		true	"Page number"				default(1)	minimum(1)
-//	@Param		email			path	string	true	"Subscribers email"
+//	@Param		email			path	string	true	"Subscribers email"			default(test@test.com)
 //
 //	@Success	200				"Successfully retrieved newsletters by subscriber email"
 //	@Failure	400				{object}	response.Error	"Invalid request with detail"
 //	@Failure	500				"Unexpected exception"
-func (u *SubscriptionController) GetNewslettersBySubscriberEmail(ctx *gin.Context) {
+func (u *SubscriptionController) GetNewslettersBySubscriptionEmail(ctx *gin.Context) {
 	pageSize, err := strconv.Atoi(ctx.DefaultQuery("page_size", "10"))
 	if err != nil {
 		u.lg.WithError(err).Error("Failed to parse page size")
@@ -127,7 +128,7 @@ func (u *SubscriptionController) GetNewslettersBySubscriberEmail(ctx *gin.Contex
 		return
 	}
 
-	newsletters, pagination, err := u.getNewslettersBySubscriberEmailHandler.Handle(ctx, email, pageSize, pageNumber)
+	newsletters, pagination, err := u.getNewslettersBySubscriptionEmailHandler.Handle(ctx, email, pageSize, pageNumber)
 	if err != nil {
 		code, body := func(err error) (int, gin.H) {
 			return http.StatusInternalServerError, gin.H{}
@@ -160,10 +161,10 @@ func (u *SubscriptionController) GetNewslettersBySubscriberEmail(ctx *gin.Contex
 // SubscribeToNewsletter
 //
 //	@Summary	SubscribeToNewsletter - used to subscribe to newsletter by email
-//	@Router		/api/v1/newsletters/{newsletter_public_id}/subscribe [post]
+//	@Router		/api/v1/newsletters/{newsletter_public_id}/subscriptions [post]
 //	@Tags		public subscription
+//	@Produce	json
 //
-//	@Param		Content-Type			header	string							true	"application/json"	default(application/json)
 //	@Param		newsletter_public_id	path	string							true	"Public newsletter identifier"
 //	@Param		email					body	request.SubscribeToNewsletter	true	"Subscriber email address"
 //
@@ -229,16 +230,16 @@ func (u *SubscriptionController) SubscribeToNewsletter(ctx *gin.Context) {
 // UnsubscribeNewsletter
 //
 //	@Summary	UnsubscribeNewsletter - used to unsubscribe from newsletter by email
-//	@Router		/api/v1/newsletters/{newsletter_public_id}/unsubscribe/{email} [delete]
+//	@Router		/api/v1/newsletters/{newsletter_public_id}/subscriptions/{email} [delete]
 //	@Tags		public subscription
+//	@Produce	json
 //
-//	@Param		Content-Type			header	string	true	"application/json"	default(application/json)
+//	@Param		Content-Type	header	string	true	"application/json"			default(application/json)
 //	@Param		newsletter_public_id	path	string	true	"Public newsletter identifier"
-//	@Param		email					path	string	true	"Subscriber email address"
+//	@Param		email					path	string	true	"Subscriber email address" default(test@test.com)
 //
 //	@Success	201						"Successfully unsubscribed from newsletter"
 //	@Failure	400						{object}	response.Error	"Invalid request with detail"
-//	@Failure	404						{object}	response.Error	"Newsletter not found"
 //	@Failure	500						"Unexpected exception"
 func (u *SubscriptionController) UnsubscribeNewsletter(ctx *gin.Context) {
 	var h *request.ContentTypeHeader

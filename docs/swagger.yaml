@@ -145,6 +145,8 @@ paths:
         name: page_number
         required: true
         type: integer
+      produces:
+      - application/json
       responses:
         "200":
           description: Successfully retrieved newsletters by user ID
@@ -161,12 +163,6 @@ paths:
       - newsletter
     post:
       parameters:
-      - default: application/json
-        description: application/json
-        in: header
-        name: Content-Type
-        required: true
-        type: string
       - default: Bearer
         description: Bearer <token>
         in: header
@@ -179,6 +175,8 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/request.CreateNewsletterRequest'
+      produces:
+      - application/json
       responses:
         "201":
           description: Newsletter was successfully created
@@ -193,15 +191,9 @@ paths:
       summary: Create - used to create new newsletter
       tags:
       - newsletter
-  /api/v1/newsletters/{newsletter_public_id}/subscribe:
+  /api/v1/newsletters/{newsletter_public_id}/subscriptions:
     post:
       parameters:
-      - default: application/json
-        description: application/json
-        in: header
-        name: Content-Type
-        required: true
-        type: string
       - description: Public newsletter identifier
         in: path
         name: newsletter_public_id
@@ -213,6 +205,8 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/request.SubscribeToNewsletter'
+      produces:
+      - application/json
       responses:
         "201":
           description: Successfully subscribed to newsletter
@@ -233,7 +227,7 @@ paths:
       summary: SubscribeToNewsletter - used to subscribe to newsletter by email
       tags:
       - public subscription
-  /api/v1/newsletters/{newsletter_public_id}/unsubscribe/{email}:
+  /api/v1/newsletters/{newsletter_public_id}/subscriptions/{email}:
     delete:
       parameters:
       - default: application/json
@@ -247,20 +241,19 @@ paths:
         name: newsletter_public_id
         required: true
         type: string
-      - description: Subscriber email address
+      - default: test@test.com
+        description: Subscriber email address
         in: path
         name: email
         required: true
         type: string
+      produces:
+      - application/json
       responses:
         "201":
           description: Successfully unsubscribed from newsletter
         "400":
           description: Invalid request with detail
-          schema:
-            $ref: '#/definitions/response.Error'
-        "404":
-          description: Newsletter not found
           schema:
             $ref: '#/definitions/response.Error'
         "500":
@@ -282,6 +275,8 @@ paths:
         name: public_id
         required: true
         type: string
+      produces:
+      - application/json
       responses:
         "200":
           description: Successfully retrieved newsletter by public ID
@@ -296,7 +291,7 @@ paths:
       summary: GetNewsletterByUserID - retrieve newsletter by its public ID
       tags:
       - public newsletter
-  /api/v1/subscribers/{email}/newsletters:
+  /api/v1/subscriptions/{email}/newsletters:
     get:
       parameters:
       - default: application/json
@@ -319,11 +314,14 @@ paths:
         name: page_number
         required: true
         type: integer
-      - description: Subscribers email
+      - default: test@test.com
+        description: Subscribers email
         in: path
         name: email
         required: true
         type: string
+      produces:
+      - application/json
       responses:
         "200":
           description: Successfully retrieved newsletters by subscriber email
@@ -333,25 +331,21 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's
+      summary: GetNewslettersBySubscriptionEmail - retrieve newsletter by subscriber's
         email
       tags:
       - public subscription
   /api/v1/users/login:
     post:
       parameters:
-      - default: application/json
-        description: application/json
-        in: header
-        name: Content-Type
-        required: true
-        type: string
       - description: Data for user login
         in: body
         name: data
         required: true
         schema:
           $ref: '#/definitions/request.RegisterUserRequest'
+      produces:
+      - application/json
       responses:
         "201":
           description: User successfully logged in
@@ -371,18 +365,14 @@ paths:
   /api/v1/users/register:
     post:
       parameters:
-      - default: application/json
-        description: application/json
-        in: header
-        name: Content-Type
-        required: true
-        type: string
       - description: Data for registering user
         in: body
         name: data
         required: true
         schema:
           $ref: '#/definitions/request.RegisterUserRequest'
+      produces:
+      - application/json
       responses:
         "201":
           description: User was successfully registered

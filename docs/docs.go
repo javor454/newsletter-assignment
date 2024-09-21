@@ -51,6 +51,9 @@ const docTemplate = `{
         },
         "/api/v1/newsletters": {
             "get": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "newsletter"
                 ],
@@ -110,19 +113,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "newsletter"
                 ],
                 "summary": "Create - used to create new newsletter",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "default": "application/json",
-                        "description": "application/json",
-                        "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "default": "Bearer",
@@ -160,21 +158,16 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/newsletters/{newsletter_public_id}/subscribe": {
+        "/api/v1/newsletters/{newsletter_public_id}/subscriptions": {
             "post": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "public subscription"
                 ],
                 "summary": "SubscribeToNewsletter - used to subscribe to newsletter by email",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "default": "application/json",
-                        "description": "application/json",
-                        "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "Public newsletter identifier",
@@ -220,8 +213,11 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/newsletters/{newsletter_public_id}/unsubscribe/{email}": {
+        "/api/v1/newsletters/{newsletter_public_id}/subscriptions/{email}": {
             "delete": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "public subscription"
                 ],
@@ -244,6 +240,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "default": "test@test.com",
                         "description": "Subscriber email address",
                         "name": "email",
                         "in": "path",
@@ -260,12 +257,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/response.Error"
                         }
                     },
-                    "404": {
-                        "description": "Newsletter not found",
-                        "schema": {
-                            "$ref": "#/definitions/response.Error"
-                        }
-                    },
                     "500": {
                         "description": "Unexpected exception"
                     }
@@ -274,6 +265,9 @@ const docTemplate = `{
         },
         "/api/v1/newsletters/{public_id}": {
             "get": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "public newsletter"
                 ],
@@ -314,12 +308,15 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/subscribers/{email}/newsletters": {
+        "/api/v1/subscriptions/{email}/newsletters": {
             "get": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "public subscription"
                 ],
-                "summary": "GetNewslettersBySubscriberEmail - retrieve newsletter by subscriber's email",
+                "summary": "GetNewslettersBySubscriptionEmail - retrieve newsletter by subscriber's email",
                 "parameters": [
                     {
                         "type": "string",
@@ -349,6 +346,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "default": "test@test.com",
                         "description": "Subscribers email",
                         "name": "email",
                         "in": "path",
@@ -373,19 +371,14 @@ const docTemplate = `{
         },
         "/api/v1/users/login": {
             "post": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "public user"
                 ],
                 "summary": "Login - Login user",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "default": "application/json",
-                        "description": "application/json",
-                        "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "Data for user login",
                         "name": "data",
@@ -420,19 +413,14 @@ const docTemplate = `{
         },
         "/api/v1/users/register": {
             "post": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "public user"
                 ],
                 "summary": "Register - Register user",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "default": "application/json",
-                        "description": "application/json",
-                        "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "Data for registering user",
                         "name": "data",

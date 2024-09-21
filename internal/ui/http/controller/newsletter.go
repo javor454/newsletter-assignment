@@ -65,8 +65,8 @@ func NewNewsletterController(
 //	@Summary	Create - used to create new newsletter
 //	@Router		/api/v1/newsletters [post]
 //	@Tags		newsletter
+//	@Produce	json
 //
-//	@Param		Content-Type	header	string							true	"application/json"	default(application/json)
 //	@Param		Authorization	header	string							true	"Bearer <token>"	default(Bearer )
 //	@Param		Newsletter		body	request.CreateNewsletterRequest	true	"Newsletter data to create"
 //
@@ -130,6 +130,7 @@ func (u *NewsletterController) Create(ctx *gin.Context) {
 //	@Summary	GetNewslettersByUserID - retrieve newsletter by creator's user ID
 //	@Router		/api/v1/newsletters [get]
 //	@Tags		newsletter
+//	@Produce	json
 //
 //	@Param		Content-Type	header		string						true	"application/json"			default(application/json)
 //	@Param		Authorization	header		string						true	"Bearer <token>"			default(Bearer )
@@ -228,6 +229,7 @@ func (u *NewsletterController) GetNewslettersByUserID(ctx *gin.Context) {
 //	@Summary	GetNewsletterByUserID - retrieve newsletter by its public ID
 //	@Router		/api/v1/newsletters/{public_id} [get]
 //	@Tags		public newsletter
+//	@Produce	json
 //
 //	@Param		Content-Type	header		string						true	"application/json"	default(application/json)
 //	@Param		public_id		path		string						true	"Newsletter public ID"
