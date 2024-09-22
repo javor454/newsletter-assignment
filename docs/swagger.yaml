@@ -101,7 +101,7 @@ paths:
       responses:
         "200":
           description: OK
-      summary: Liveness - determines if app is running
+      summary: Determines if app is running
       tags:
       - health
   /api/health/readiness:
@@ -113,7 +113,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.HealthStatus'
-      summary: Readiness - determines if app is ready to receive traffic
+      summary: Determines if app is ready to receive traffic
       tags:
       - health
   /api/v1/newsletters:
@@ -158,7 +158,7 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: GetNewslettersByUserID - retrieve newsletter by creator's user ID
+      summary: Retrieve newsletter by creator's user ID
       tags:
       - newsletter
     post:
@@ -188,11 +188,13 @@ paths:
           description: Unauthorized
         "500":
           description: Unexpected exception
-      summary: Create - used to create new newsletter
+      summary: Create new newsletter
       tags:
       - newsletter
   /api/v1/newsletters/{newsletter_public_id}/subscriptions:
     post:
+      consumes:
+      - application/json
       parameters:
       - description: Public newsletter identifier
         in: path
@@ -224,41 +226,7 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: SubscribeToNewsletter - used to subscribe to newsletter by email
-      tags:
-      - public subscription
-  /api/v1/newsletters/{newsletter_public_id}/subscriptions/{email}:
-    delete:
-      parameters:
-      - default: application/json
-        description: application/json
-        in: header
-        name: Content-Type
-        required: true
-        type: string
-      - description: Public newsletter identifier
-        in: path
-        name: newsletter_public_id
-        required: true
-        type: string
-      - default: test@test.com
-        description: Subscriber email address
-        in: path
-        name: email
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Successfully unsubscribed from newsletter
-        "400":
-          description: Invalid request with detail
-          schema:
-            $ref: '#/definitions/response.Error'
-        "500":
-          description: Unexpected exception
-      summary: UnsubscribeNewsletter - used to unsubscribe from newsletter by email
+      summary: Used to subscribe to newsletter by email
       tags:
       - public subscription
   /api/v1/newsletters/{public_id}:
@@ -288,11 +256,13 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: GetNewsletterByUserID - retrieve newsletter by its public ID
+      summary: Retrieve newsletter by its public ID
       tags:
       - public newsletter
   /api/v1/subscriptions/{email}/newsletters:
     get:
+      consumes:
+      - application/json
       parameters:
       - default: application/json
         description: application/json
@@ -331,8 +301,42 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: GetNewslettersBySubscriptionEmail - retrieve newsletter by subscriber's
-        email
+      summary: Retrieve newsletter by subscriber's email
+      tags:
+      - public subscription
+  /api/v1/unsubscribe:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: application/json
+        description: application/json
+        in: header
+        name: Content-Type
+        required: true
+        type: string
+      - description: Public newsletter identifier
+        in: query
+        name: newsletter_public_id
+        required: true
+        type: string
+      - description: Token to associate with subscription
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully unsubscribed from newsletter
+        "400":
+          description: Invalid request with detail
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Unexpected exception
+      summary: Used to unsubscribe from newsletter by email
       tags:
       - public subscription
   /api/v1/users/login:
@@ -359,7 +363,7 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: Login - Login user
+      summary: Login user, returning token for authorization
       tags:
       - public user
   /api/v1/users/register:
@@ -386,7 +390,7 @@ paths:
             $ref: '#/definitions/response.Error'
         "500":
           description: Unexpected exception
-      summary: Register - Register user
+      summary: Register user, returning token for authorization
       tags:
       - public user
 swagger: "2.0"

@@ -22,6 +22,7 @@ CREATE TABLE subscriptions (
     newsletter_id UUID REFERENCES newsletters(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     disabled_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    token VARCHAR(255) NOT NULL,
     UNIQUE (subscriber_email, newsletter_id)
 );
 

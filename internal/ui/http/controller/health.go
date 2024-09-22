@@ -29,9 +29,10 @@ func NewHealthController(
 
 // Liveness
 //
+//	@Summary	Determines if app is running
 //	@Router		/api/health/liveness [get]
-//	@Summary	Liveness - determines if app is running
 //	@Tags		health
+//
 //	@Success	200
 func (c *HealthController) Liveness(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{})
@@ -39,7 +40,7 @@ func (c *HealthController) Liveness(ctx *gin.Context) {
 
 // Readiness
 //
-//	@Summary	Readiness - determines if app is ready to receive traffic
+//	@Summary	Determines if app is ready to receive traffic
 //	@Router		/api/health/readiness [get]
 //	@Tags		health
 //	@Produce	json

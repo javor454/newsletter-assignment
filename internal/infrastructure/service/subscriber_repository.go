@@ -20,10 +20,11 @@ import (
 type SubscriptionParams struct {
 	Email              string `json:"email"`
 	NewsletterPublicID string `json:"newsletter_id"`
+	SubscriptionToken  string `json:"subscription_token"`
 }
 
 type SubscriptionCache interface {
-	CacheSubscription(ctx context.Context, email, newsletterPublicID string) error
+	AddSubscribedNewsletter(ctx context.Context, email, newsletterPublicID string) error
 }
 
 type SubscriberRepository struct {
@@ -63,9 +64,6 @@ func NewSubscriberRepository(
 	}
 }
 
-// TODO (nice2have): simplify somehow
-
-// Subscribe a
 func (s *SubscriberRepository) Subscribe(ctx context.Context, subscription *domain.Subscription) error {
 	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond) // TODO: short or long??
 	defer cancel()
@@ -87,15 +85,17 @@ func (s *SubscriberRepository) Subscribe(ctx context.Context, subscription *doma
 	}
 
 	if err := operation.CreateOrUpdateSubscriptionTx(ctx, tx, &operation.CreateSubscriptionParams{
-		ID:              subscription.ID().String(),
-		SubscriberEmail: subscription.Email().String(),
-		NewsletterID:    idRow.ID,
+		ID:                subscription.ID().String(),
+		SubscriberEmail:   subscription.Email().String(),
+		NewsletterID:      idRow.ID,
+		SubscriptionToken: subscription.Token(),
 	}); err != nil {
 		return rollback(tx, err)
 	}
 	paramsJson, err := json.Marshal(SubscriptionParams{
 		Email:              subscription.Email().String(),
 		NewsletterPublicID: subscription.NewsletterPublicID().String(),
+		SubscriptionToken:  subscription.Token(),
 	})
 	if err != nil {
 		return rollback(tx, err)
@@ -119,10 +119,10 @@ func (s *SubscriberRepository) Subscribe(ctx context.Context, subscription *doma
 func (s *SubscriberRepository) ProcessSubscribeEmailJobs(ctx context.Context) error {
 	const maxJobs = 100
 
-	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	getUnsendCtx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 
-	jobs, err := s.getUnsendEmailJobs.Execute(ctx, maxJobs)
+	jobs, err := s.getUnsendEmailJobs.Execute(getUnsendCtx, maxJobs)
 	if err != nil {
 		return err
 	}
@@ -154,8 +154,12 @@ func (s *SubscriberRepository) ProcessSubscribeEmailJobs(ctx context.Context) er
 				return
 			}
 
-			if s.appConfig.SendMail {
-				if err := s.mailService.SendSubscribed(subscribeParams.Email); err != nil {
+			if s.appConfig.SendMail || true {
+				if err := s.mailService.SendSubscribed(
+					subscribeParams.Email,
+					subscribeParams.NewsletterPublicID,
+					subscribeParams.SubscriptionToken,
+				); err != nil {
 					s.lg.WithField("job_id", job.ID).WithError(err).Error("failed to send subscribed email")
 					return
 				}
@@ -167,7 +171,7 @@ func (s *SubscriberRepository) ProcessSubscribeEmailJobs(ctx context.Context) er
 
 			// TODO: if cache fails, processing is still successful to prevent infinite mails
 			//  - maybe periodically check data? or introduce integrity hash and invalidate it at the begin of processing
-			if err := s.subscriptionCache.CacheSubscription(ctx, subscribeParams.Email, subscribeParams.NewsletterPublicID); err != nil {
+			if err := s.subscriptionCache.AddSubscribedNewsletter(ctx, subscribeParams.Email, subscribeParams.NewsletterPublicID); err != nil {
 				s.lg.WithField("job_id", job.ID).WithError(err).Error("failed to cache subscription")
 				return
 			}
@@ -180,9 +184,9 @@ func (s *SubscriberRepository) ProcessSubscribeEmailJobs(ctx context.Context) er
 		return nil
 	}
 
-	ctx, cancel = context.WithTimeout(ctx, 500*time.Millisecond)
+	updateUnsendCtx, cancel := context.WithTimeout(ctx, 500*time.Millisecond) // TODO: add exponential backoff or smth
 	defer cancel()
-	if err := s.updateUnsentEmailJobs.Execute(ctx, &operation.UpdateUnsentEmailJobsParams{
+	if err := s.updateUnsentEmailJobs.Execute(updateUnsendCtx, &operation.UpdateUnsentEmailJobsParams{
 		JobIDs: processedIDs,
 	}); err != nil {
 		return err

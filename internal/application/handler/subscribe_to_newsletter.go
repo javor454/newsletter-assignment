@@ -6,18 +6,24 @@ import (
 	"github.com/javor454/newsletter-assignment/internal/domain"
 )
 
+type TokenGenerator interface {
+	GenerateSubscriptionToken(email *domain.Email) (string, error)
+}
+
 type SubscribeToNewsletterRepository interface {
 	Subscribe(ctx context.Context, subscription *domain.Subscription) error
 }
 
 type SubscribeToNewsletterHandler struct {
+	tokenGenerator        TokenGenerator
 	subscribeToNewsletter SubscribeToNewsletterRepository
 }
 
 func NewSubscribeToNewsletterHandler(
+	tg TokenGenerator,
 	stn SubscribeToNewsletterRepository,
 ) *SubscribeToNewsletterHandler {
-	return &SubscribeToNewsletterHandler{subscribeToNewsletter: stn}
+	return &SubscribeToNewsletterHandler{tokenGenerator: tg, subscribeToNewsletter: stn}
 }
 
 func (r *SubscribeToNewsletterHandler) Handle(ctx context.Context, newsletterPublicID, email string) error {
@@ -30,7 +36,13 @@ func (r *SubscribeToNewsletterHandler) Handle(ctx context.Context, newsletterPub
 		return err
 	}
 
-	subscription := domain.NewSubscription(pubID, emailVo)
+	token, err := r.tokenGenerator.GenerateSubscriptionToken(emailVo)
+	if err != nil {
+		return err
+	}
+
+	subscription := domain.NewSubscription(pubID, emailVo, token)
+
 	if err := r.subscribeToNewsletter.Subscribe(ctx, subscription); err != nil {
 		return err
 	}

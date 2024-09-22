@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"time"
 
 	"github.com/javor454/newsletter-assignment/app/config"
@@ -15,10 +14,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-// @title			Newsletter assignment
-// @version		1.0
-// @description	Newsletter assignment for STRV.
-// @contact.email	javornicky.jiri@gmail.com
+//	@title			Newsletter assignment
+//	@version		1.0
+//	@description	Newsletter assignment for STRV.
+//	@contact.email	javornicky.jiri@gmail.com
 func main() {
 	shutdownHandler := shutdown.NewHandler()
 
@@ -27,67 +26,58 @@ func main() {
 	viper.AutomaticEnv()
 	appConfig, err := config.CreateAppConfig()
 	if err != nil {
-		panic(err)
+		panic("[CONFIG] failed to load: " + err.Error())
 	}
 	pgConfig, err := config.CreatePostgresConfig()
 	if err != nil {
-		panic(err)
+		panic("[CONFIG] failed to load: " + err.Error())
 	}
 	fbConfig, err := config.CreateFirebaseConfig()
 	if err != nil {
-		panic(err)
+		panic("[CONFIG] failed to load: " + err.Error())
 	}
 
 	location, err := time.LoadLocation(appConfig.Timezone)
 	if err != nil {
-		panic(err)
+		panic("failed to load timezone")
 	}
 	time.Local = location
 
 	lg := logger.NewLogger(appConfig)
 
-	lg.Debug("[PG] Connecting...")
-	pgConn, err := pg.NewConnection(pgConfig)
+	pgConn, err := pg.NewConnection(lg, pgConfig)
 	if err != nil {
-		lg.Fatal(err)
+		panic("[PG] failed to connect: " + err.Error())
 	}
-	lg.Info("[PG] Connected")
 
-	lg.Debug("[FIREBASE] Connecting...")
-	fbClient, err := firebase.NewClient(rootCtx, fbConfig)
-	lg.Info("[FIREBASE] Connected")
-
-	lg.Debug("[SENDGRID] Creating client...")
-	mailClient := sendgrid.NewClient(appConfig)
+	fbClient, err := firebase.NewClient(lg, rootCtx, fbConfig)
 	if err != nil {
-		lg.Fatal(err)
+		panic("[FIREBASE] failed to connect: " + err.Error())
 	}
-	lg.Info("[SENDGRID] Created")
 
-	lg.Debug("[MIGRATIONS] Starting up...")
-	if err := pg.MigrationsUp(pgConn); err != nil {
-		log.Fatal(err)
+	mailClient := sendgrid.NewClient(lg, appConfig)
+	if err != nil {
+		panic("[SENDGRID] failed to create client: " + err.Error())
 	}
-	lg.Info("[MIGRATIONS] Done")
 
-	lg.Debug("[HTTP] Creating server...")
+	if err := pg.MigrationsUp(lg, pgConn); err != nil {
+		panic("[MIGRATIONS] failed to run: " + err.Error())
+	}
+
 	httpServer := http_server.NewServer(lg, appConfig)
-	lg.Info("[HTTP] Server created")
 
 	internal.RegisterDependencies(rootCtx, lg, appConfig, pgConn, httpServer, mailClient, fbClient)
 
-	lg.Debug("[HTTP] Running server...")
 	ginErrChan := httpServer.RunGinServer(appConfig.HttpPort)
-	lg.Info("[HTTP] Server running...")
 
 	select {
 	case err := <-ginErrChan:
-		lg.Errorf("[HTTP] Server error: %s\n", err.Error())
+		lg.Errorf("[GIN] Server error: %s\n", err.Error())
 		shutdownHandler.SignalShutdown()
 	case <-rootCtx.Done():
 		lg.Info("Received signal, shutting down with grace...")
 		if err := httpServer.GracefulShutdown(); err != nil {
-			lg.WithError(err).Fatalf("[HTTP] Shutdown error.")
+			lg.WithError(err).Fatalf("[GIN] Shutdown error.")
 		}
 		if err := pgConn.Close(); err != nil {
 			lg.WithError(err).Fatalf("[PG] Shutdown error.")

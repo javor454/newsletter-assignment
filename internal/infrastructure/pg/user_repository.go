@@ -7,7 +7,7 @@ import (
 
 	"github.com/javor454/newsletter-assignment/internal/application"
 	"github.com/javor454/newsletter-assignment/internal/domain"
-	"github.com/javor454/newsletter-assignment/internal/infrastructure/crypt"
+	"github.com/javor454/newsletter-assignment/internal/infrastructure/bcrypt"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg/operation"
 )
 
@@ -24,7 +24,7 @@ func NewUserRepository(createUser *operation.CreateUser, getUserByEmail *operati
 }
 
 func (u *UserRepository) Register(ctx context.Context, user *domain.User) error {
-	bcryptHash, err := crypt.NewBcryptHashFromPassword(user.Password())
+	bcryptHash, err := bcrypt.NewBcryptHashFromPassword(user.Password())
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (u *UserRepository) GetByEmailAndPassword(
 	if err != nil {
 		return nil, fmt.Errorf("invalid uuid format in db %w", err)
 	}
-	bcryptHash := crypt.CreateHashFromExisting(res.PasswordHash)
+	bcryptHash := bcrypt.CreateHashFromExisting(res.PasswordHash)
 	if !bcryptHash.IsEqual(pass) {
 		return nil, application.InvalidPasswordError
 	}

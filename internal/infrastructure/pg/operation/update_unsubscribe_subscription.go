@@ -21,6 +21,7 @@ func NewUpdateDisableSubscription(pgConn *sql.DB) *UpdateDisableSubscription {
 	}
 }
 
+// Execute TODO: Tests this properly
 func (u *UpdateDisableSubscription) Execute(ctx context.Context, p *UpdateDisableSubscriptionParams) error {
 	const query = `
 		UPDATE subscriptions SET disabled_at = CURRENT_TIMESTAMP

@@ -27,6 +27,8 @@ type Server struct {
 }
 
 func NewServer(lg logger.Logger, cfg *config.AppConfig) *Server {
+	lg.Debug("[GIN] Creating server...")
+
 	gin.SetMode(gin.ReleaseMode)
 	ge := gin.New()
 
@@ -52,11 +54,14 @@ func NewServer(lg logger.Logger, cfg *config.AppConfig) *Server {
 		Oauth2DefaultClientID:    "",
 	}
 	ge.GET("/api/docs/*any", ginSwagger.CustomWrapHandler(&gsc, swaggerFiles.Handler))
-
-	return &Server{
+	s := &Server{
 		engine: ge,
 		lg:     lg,
 	}
+
+	lg.Info("[GIN] Server created")
+
+	return s
 }
 
 func (s *Server) GracefulShutdown() error {
@@ -64,7 +69,7 @@ func (s *Server) GracefulShutdown() error {
 	defer cancel()
 
 	if s.srv == nil {
-		return fmt.Errorf("[GIN] Http server not started yet")
+		return fmt.Errorf("[GIN] Server not started yet")
 	}
 
 	if err := s.srv.Shutdown(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -75,6 +80,8 @@ func (s *Server) GracefulShutdown() error {
 }
 
 func (s *Server) RunGinServer(port int) chan error {
+	s.lg.Debug("[GIN] Running server...")
+
 	errChan := make(chan error, 1)
 
 	for _, v := range s.engine.Routes() {
@@ -94,6 +101,7 @@ func (s *Server) RunGinServer(port int) chan error {
 			errChan <- fmt.Errorf("[GIN] Server error: %w", err)
 		}
 	}()
+	s.lg.Info("[GIN] Server running...")
 
 	return errChan
 }

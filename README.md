@@ -162,8 +162,8 @@
     - test
     - deploy
 - features
-  - unsubscription link
-  - unique code to pair together subscription and unsubscription links
+  - unsubscription link ✅
+  - unique code to pair together subscription and unsubscription links ✅
   - rework `api/v1/newsletters/:public_id` to accept multiple public IDS to support firebase
 
 ## TODOS extras
@@ -221,7 +221,7 @@
       - expiration
       - malformed
     - all happy paths + application errors
-- FIX
+- FIX ✅
   - check volumes ✅
 - deployment
   - digital ocean
@@ -234,13 +234,13 @@
   - domena?
   - tags
   - zero downtime redeploy?
-- predani
-  - readme
+- predani ✅
+  - readme ✅
     - functionality overview ✅ 
     - setup ✅
     - link to api docs ✅
     - architecture decisions? ✅
     - future improvements? ✅
-    - popis flows
+    - popis flows ✅
 
 

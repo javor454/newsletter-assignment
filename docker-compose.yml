@@ -23,6 +23,7 @@ services:
                 condition: service_healthy
         environment:
             CONFIG_HTTP_PORT: 8080
+            CONFIG_HOST: http://localhost
             CONFIG_APP_ENV: dev
             CONFIG_APP_NAME: newsletter-assignment
             CONFIG_JWT_SECRET: ${CONFIG_JWT_SECRET}
@@ -38,7 +39,6 @@ services:
 
             # Sendgrid
             CONFIG_SENDGRID_API_KEY: ${CONFIG_SENDGRID_API_KEY}
-            CONFIG_SENDGRID_TEMPLATE_ID: ${CONFIG_SENDGRID_TEMPLATE_ID}
             CONFIG_SEND_MAIL: "false"
 
             # Logger

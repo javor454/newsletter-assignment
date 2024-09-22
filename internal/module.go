@@ -12,8 +12,8 @@ import (
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/app/sendgrid"
 	"github.com/javor454/newsletter-assignment/internal/application/handler"
-	"github.com/javor454/newsletter-assignment/internal/infrastructure/auth"
 	firebaseinfra "github.com/javor454/newsletter-assignment/internal/infrastructure/firebase"
+	"github.com/javor454/newsletter-assignment/internal/infrastructure/jwt"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg"
 	"github.com/javor454/newsletter-assignment/internal/infrastructure/pg/operation"
 	sendgridinfra "github.com/javor454/newsletter-assignment/internal/infrastructure/sendgrid"
@@ -42,7 +42,7 @@ func RegisterDependencies(
 	uds := operation.NewUpdateDisableSubscription(pgConn)
 	gnbpi := operation.NewGetNewslettersByPublicID(pgConn)
 
-	ms := sendgridinfra.NewMailService(mailClient, appConfig.SendGridTemplateID)
+	ms := sendgridinfra.NewMailService(lg, appConfig, mailClient)
 
 	sc := firebaseinfra.NewSubscriptionCacheManager(fbClient)
 
@@ -50,20 +50,20 @@ func RegisterDependencies(
 	nr := pg.NewNewsletterRepository(cno, gnbui, gnbse, gnbpi)
 	sr := service.NewSubscriberRepository(lg, pgConn, gnibpi, guej, ms, uuej, appConfig, uds, sc)
 
-	js := auth.NewJwtService(appConfig.JwtSecret)
+	tm := jwt.NewTokenManager(appConfig.JwtSecret, appConfig.Host)
 
 	hm := healthcheck.NewHealthMonitor(
 		healthcheck.NewPgIndicator(pgConn, 5*time.Second),
 	)
 
-	ruh := handler.NewRegisterUserHandler(ur, js)
-	luh := handler.NewLoginUserHandler(ur, js)
-	dth := handler.NewDecodeTokenHandler(js)
+	ruh := handler.NewRegisterUserHandler(ur, tm)
+	luh := handler.NewLoginUserHandler(ur, tm)
+	dth := handler.NewDecodeTokenHandler(tm)
 	cnh := handler.NewCreateNewsletterHandler(nr)
 	gnbuih := handler.NewGetNewslettersByUserIDHandler(nr)
-	stnh := handler.NewSubscribeToNewsletterHandler(sr)
+	stnh := handler.NewSubscribeToNewsletterHandler(tm, sr)
 	gnbseh := handler.NewGetNewslettersBySubscriptionEmailHandler(nr)
-	uh := handler.NewUnsubscribeNewsletterHandler(sr)
+	uh := handler.NewUnsubscribeNewsletterHandler(sr, tm, sc)
 	pejh := handler.NewProcessEmailJobsHandler(lg, sr)
 	pejh.Handle(ctx)
 	gnbpih := handler.NewGetNewslettersByPublicIDHandler(nr)

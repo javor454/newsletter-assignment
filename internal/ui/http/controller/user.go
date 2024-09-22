@@ -10,16 +10,15 @@ import (
 	"github.com/javor454/newsletter-assignment/app/http_server"
 	"github.com/javor454/newsletter-assignment/app/logger"
 	"github.com/javor454/newsletter-assignment/internal/application"
-	"github.com/javor454/newsletter-assignment/internal/application/dto"
 	"github.com/javor454/newsletter-assignment/internal/ui/http/request"
 )
 
 type RegisterUserHandler interface {
-	Handle(ctx context.Context, email string, password string) (*dto.Token, error)
+	Handle(ctx context.Context, email string, password string) (string, error)
 }
 
 type LoginUserHandler interface {
-	Handle(ctx context.Context, email string, password string) (*dto.Token, error)
+	Handle(ctx context.Context, email string, password string) (string, error)
 }
 
 type UserController struct {
@@ -48,9 +47,10 @@ func NewUserController(
 
 // Register
 //
-//	@Summary	Register - Register user
+//	@Summary	Register user, returning token for authorization
 //	@Router		/api/v1/users/register [post]
 //	@Tags		public user
+//	@Accepts	json
 //	@Produce	json
 //
 //	@Param		data	body	request.RegisterUserRequest	true	"Data for registering user"
@@ -97,15 +97,16 @@ func (u *UserController) Register(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", token.String()))
+	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", token))
 	ctx.JSON(http.StatusCreated, gin.H{})
 }
 
 // Login
 //
-//	@Summary	Login - Login user
+//	@Summary	Login user, returning token for authorization
 //	@Router		/api/v1/users/login [post]
 //	@Tags		public user
+//	@Accepts	json
 //	@Produce	json
 //
 //	@Param		data	body	request.RegisterUserRequest	true	"Data for user login"
@@ -152,6 +153,6 @@ func (u *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", token.String()))
+	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", token))
 	ctx.JSON(http.StatusCreated, gin.H{})
 }

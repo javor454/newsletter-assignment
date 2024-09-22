@@ -22,7 +22,7 @@ const docTemplate = `{
                 "tags": [
                     "health"
                 ],
-                "summary": "Liveness - determines if app is running",
+                "summary": "Determines if app is running",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -38,7 +38,7 @@ const docTemplate = `{
                 "tags": [
                     "health"
                 ],
-                "summary": "Readiness - determines if app is ready to receive traffic",
+                "summary": "Determines if app is ready to receive traffic",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -57,7 +57,7 @@ const docTemplate = `{
                 "tags": [
                     "newsletter"
                 ],
-                "summary": "GetNewslettersByUserID - retrieve newsletter by creator's user ID",
+                "summary": "Retrieve newsletter by creator's user ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -119,7 +119,7 @@ const docTemplate = `{
                 "tags": [
                     "newsletter"
                 ],
-                "summary": "Create - used to create new newsletter",
+                "summary": "Create new newsletter",
                 "parameters": [
                     {
                         "type": "string",
@@ -160,13 +160,16 @@ const docTemplate = `{
         },
         "/api/v1/newsletters/{newsletter_public_id}/subscriptions": {
             "post": {
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "public subscription"
                 ],
-                "summary": "SubscribeToNewsletter - used to subscribe to newsletter by email",
+                "summary": "Used to subscribe to newsletter by email",
                 "parameters": [
                     {
                         "type": "string",
@@ -213,56 +216,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/newsletters/{newsletter_public_id}/subscriptions/{email}": {
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "public subscription"
-                ],
-                "summary": "UnsubscribeNewsletter - used to unsubscribe from newsletter by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "application/json",
-                        "description": "application/json",
-                        "name": "Content-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Public newsletter identifier",
-                        "name": "newsletter_public_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "test@test.com",
-                        "description": "Subscriber email address",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Successfully unsubscribed from newsletter"
-                    },
-                    "400": {
-                        "description": "Invalid request with detail",
-                        "schema": {
-                            "$ref": "#/definitions/response.Error"
-                        }
-                    },
-                    "500": {
-                        "description": "Unexpected exception"
-                    }
-                }
-            }
-        },
         "/api/v1/newsletters/{public_id}": {
             "get": {
                 "produces": [
@@ -271,7 +224,7 @@ const docTemplate = `{
                 "tags": [
                     "public newsletter"
                 ],
-                "summary": "GetNewsletterByUserID - retrieve newsletter by its public ID",
+                "summary": "Retrieve newsletter by its public ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -310,13 +263,16 @@ const docTemplate = `{
         },
         "/api/v1/subscriptions/{email}/newsletters": {
             "get": {
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "public subscription"
                 ],
-                "summary": "GetNewslettersBySubscriptionEmail - retrieve newsletter by subscriber's email",
+                "summary": "Retrieve newsletter by subscriber's email",
                 "parameters": [
                     {
                         "type": "string",
@@ -369,6 +325,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/unsubscribe": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "public subscription"
+                ],
+                "summary": "Used to unsubscribe from newsletter by email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "application/json",
+                        "description": "application/json",
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Public newsletter identifier",
+                        "name": "newsletter_public_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token to associate with subscription",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully unsubscribed from newsletter"
+                    },
+                    "400": {
+                        "description": "Invalid request with detail",
+                        "schema": {
+                            "$ref": "#/definitions/response.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected exception"
+                    }
+                }
+            }
+        },
         "/api/v1/users/login": {
             "post": {
                 "produces": [
@@ -377,7 +385,7 @@ const docTemplate = `{
                 "tags": [
                     "public user"
                 ],
-                "summary": "Login - Login user",
+                "summary": "Login user, returning token for authorization",
                 "parameters": [
                     {
                         "description": "Data for user login",
@@ -419,7 +427,7 @@ const docTemplate = `{
                 "tags": [
                     "public user"
                 ],
-                "summary": "Register - Register user",
+                "summary": "Register user, returning token for authorization",
                 "parameters": [
                     {
                         "description": "Data for registering user",

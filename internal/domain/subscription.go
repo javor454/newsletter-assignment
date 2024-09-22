@@ -4,13 +4,15 @@ type Subscription struct {
 	id                 *ID
 	newsletterPublicID *ID
 	email              *Email
+	token              string
 }
 
-func NewSubscription(newsletterPublicID *ID, email *Email) *Subscription {
+func NewSubscription(newsletterPublicID *ID, email *Email, token string) *Subscription {
 	return &Subscription{
 		id:                 NewID(),
 		newsletterPublicID: newsletterPublicID,
 		email:              email,
+		token:              token,
 	}
 }
 
@@ -24,4 +26,8 @@ func (s *Subscription) NewsletterPublicID() *ID {
 
 func (s *Subscription) Email() *Email {
 	return s.email
+}
+
+func (s *Subscription) Token() string {
+	return s.token
 }

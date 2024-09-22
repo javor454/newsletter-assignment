@@ -17,7 +17,7 @@ func NewLogger(appConfig *config.AppConfig) Logger {
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	logger.SetOutput(os.Stdout)
 
-	logger.Debugln("[LOGGER] Creating...")
+	logger.Debugln("[LOGGER] Initialized")
 
 	return logger
 }

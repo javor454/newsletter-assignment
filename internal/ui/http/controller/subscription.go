@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -25,7 +26,7 @@ type SubscribeToNewsletterHandler interface {
 }
 
 type UnsubscribeNewsletterHandler interface {
-	Handle(ctx context.Context, newsletterPublicID, email string) error
+	Handle(ctx context.Context, newsletterPublicID, token string) error
 }
 
 type SubscriptionController struct {
@@ -54,8 +55,10 @@ func NewSubscriptionController(
 		"api/v1/newsletters/:newsletter_public_id/subscriptions",
 		controller.SubscribeToNewsletter,
 	)
-	httpServer.GetEngine().DELETE(
-		"api/v1/newsletters/:newsletter_public_id/subscriptions/:email",
+	// use GET to hack unsubscribing via link
+	// TODO: prepare version which adheres to REST principles
+	httpServer.GetEngine().GET(
+		"api/v1/unsubscribe",
 		controller.UnsubscribeNewsletter,
 	)
 
@@ -64,9 +67,10 @@ func NewSubscriptionController(
 
 // GetNewslettersBySubscriptionEmail
 //
-//	@Summary	GetNewslettersBySubscriptionEmail - retrieve newsletter by subscriber's email
+//	@Summary	Retrieve newsletter by subscriber's email
 //	@Router		/api/v1/subscriptions/{email}/newsletters [get]
 //	@Tags		public subscription
+//	@Accept		json
 //	@Produce	json
 //
 //	@Param		Content-Type	header	string	true	"application/json"			default(application/json)
@@ -160,9 +164,10 @@ func (u *SubscriptionController) GetNewslettersBySubscriptionEmail(ctx *gin.Cont
 
 // SubscribeToNewsletter
 //
-//	@Summary	SubscribeToNewsletter - used to subscribe to newsletter by email
+//	@Summary	Used to subscribe to newsletter by email
 //	@Router		/api/v1/newsletters/{newsletter_public_id}/subscriptions [post]
 //	@Tags		public subscription
+//	@Accept		json
 //	@Produce	json
 //
 //	@Param		newsletter_public_id	path	string							true	"Public newsletter identifier"
@@ -229,53 +234,44 @@ func (u *SubscriptionController) SubscribeToNewsletter(ctx *gin.Context) {
 
 // UnsubscribeNewsletter
 //
-//	@Summary	UnsubscribeNewsletter - used to unsubscribe from newsletter by email
-//	@Router		/api/v1/newsletters/{newsletter_public_id}/subscriptions/{email} [delete]
+//	@Summary	Used to unsubscribe from newsletter by email
+//	@Router		/api/v1/unsubscribe [get]
 //	@Tags		public subscription
+//	@Accept		json
 //	@Produce	json
 //
-//	@Param		Content-Type	header	string	true	"application/json"			default(application/json)
-//	@Param		newsletter_public_id	path	string	true	"Public newsletter identifier"
-//	@Param		email					path	string	true	"Subscriber email address" default(test@test.com)
+//	@Param		Content-Type			header	string	true	"application/json"	default(application/json)
+//	@Param		newsletter_public_id	query	string	true	"Public newsletter identifier"
+//	@Param		token					query	string	true	"Token to associate with subscription"
 //
-//	@Success	201						"Successfully unsubscribed from newsletter"
+//	@Success	200						"Successfully unsubscribed from newsletter"
 //	@Failure	400						{object}	response.Error	"Invalid request with detail"
 //	@Failure	500						"Unexpected exception"
 func (u *SubscriptionController) UnsubscribeNewsletter(ctx *gin.Context) {
-	var h *request.ContentTypeHeader
-	if err := ctx.ShouldBindHeader(&h); err != nil {
-		u.lg.WithError(err).Error("Failed to bind headers")
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-
-		return
-	}
-	if err := h.Validate(); err != nil {
-		u.lg.WithError(err).Error("Failed to validate headers")
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-
-		return
-	}
-
-	newsletterID := ctx.Param("newsletter_public_id")
+	newsletterID := ctx.Query("newsletter_public_id")
+	fmt.Println(newsletterID)
 	if newsletterID == "" {
-		u.lg.Error("Invalid newsletter_id parameter")
+		u.lg.Error("Invalid newsletter_id query parameter")
 		ctx.JSON(http.StatusBadRequest, gin.H{})
 
 		return
 	}
 
-	email := ctx.Param("email")
-	if email == "" {
-		u.lg.Error("Invalid email parameter")
+	token := ctx.Query("token")
+	if token == "" {
+		u.lg.Error("Invalid token query parameter")
 		ctx.JSON(http.StatusBadRequest, gin.H{})
 
 		return
 	}
 
-	if err := u.unsubscribeNewsletterHandler.Handle(ctx, newsletterID, email); err != nil {
+	if err := u.unsubscribeNewsletterHandler.Handle(ctx, newsletterID, token); err != nil {
 		code, body := func(err error) (int, gin.H) {
 			if errors.Is(err, application.InvalidUUIDError) {
 				return http.StatusBadRequest, gin.H{"error": "Invalid UUID"} // TODO (nice2have): improve message
+			}
+			if errors.Is(err, application.InvalidTokenError) {
+				return http.StatusUnauthorized, gin.H{}
 			}
 			if errors.Is(err, application.NewsletterNotFoundError) {
 				return http.StatusNotFound, gin.H{"error": "Newsletter not found"}
@@ -289,5 +285,5 @@ func (u *SubscriptionController) UnsubscribeNewsletter(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{})
+	ctx.JSON(http.StatusOK, gin.H{})
 }

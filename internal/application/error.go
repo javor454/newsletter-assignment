@@ -10,4 +10,5 @@ var (
 	AlreadySubscibedToNewsletterError = errors.New("already subscibed to newsletter")
 	UnknownUserError                  = errors.New("unknown user")
 	InvalidUUIDError                  = errors.New("invalid uuid")
+	InvalidTokenError                 = errors.New("invalid token")
 )

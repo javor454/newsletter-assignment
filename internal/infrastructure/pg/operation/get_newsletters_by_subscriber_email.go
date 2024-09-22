@@ -33,12 +33,12 @@ func (o *GetNewslettersBySubscriptionEmail) Execute(
 	const countQuery = `
         SELECT COUNT(*) as c
         FROM subscriptions s JOIN newsletters n ON n.id = s.newsletter_id 
-        WHERE s.subscriber_email = $1;
+        WHERE s.subscriber_email = $1 AND s.disabled_at IS NULL;
     `
 	const query = `
 		SELECT n.id, n.public_id, n.name, n.description, n.created_at
 		FROM subscriptions s JOIN newsletters n ON n.id = s.newsletter_id
-		WHERE s.subscriber_email = $1
+		WHERE s.subscriber_email = $1 AND s.disabled_at IS NULL
 		ORDER BY n.id
 		LIMIT $2 OFFSET $3;
 	`

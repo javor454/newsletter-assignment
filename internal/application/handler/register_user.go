@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 
-	"github.com/javor454/newsletter-assignment/internal/application/dto"
 	"github.com/javor454/newsletter-assignment/internal/domain"
 )
 
@@ -23,24 +22,24 @@ func NewRegisterUserHandler(us RegisterUser, ts GenerateToken) *RegisterUserHand
 	}
 }
 
-func (r *RegisterUserHandler) Handle(ctx context.Context, email string, password string) (*dto.Token, error) {
+func (r *RegisterUserHandler) Handle(ctx context.Context, email string, password string) (string, error) {
 	emailVo, err := domain.NewEmail(email)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	pass, err := domain.NewPassword(password)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	user := domain.NewUser(emailVo, pass)
 	if err := r.registerUser.Register(ctx, user); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	token, err := r.generateToken.Generate(user)
+	token, err := r.generateToken.GenerateUserToken(user)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	return token, nil
