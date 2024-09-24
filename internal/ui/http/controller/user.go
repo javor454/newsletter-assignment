@@ -29,7 +29,6 @@ type UserController struct {
 
 func NewUserController(
 	lg logger.Logger,
-	httpServer *http_server.Server,
 	ruh RegisterUserHandler,
 	luh LoginUserHandler,
 ) *UserController {
@@ -39,10 +38,12 @@ func NewUserController(
 		lg:  lg,
 	}
 
-	httpServer.GetEngine().POST("api/v1/users/register", controller.Register)
-	httpServer.GetEngine().POST("api/v1/users/login", controller.Login)
-
 	return controller
+}
+
+func (u *UserController) RegisterUserController(httpServer *http_server.Server) {
+	httpServer.GetEngine().POST("api/v1/users/register", u.Register)
+	httpServer.GetEngine().POST("api/v1/users/login", u.Login)
 }
 
 // Register
@@ -53,7 +54,7 @@ func NewUserController(
 //	@Accepts	json
 //	@Produce	json
 //
-//	@Param		data	body	request.RegisterUserRequest	true	"Data for registering user"
+//	@Param		data	body	request.UserRequest	true	"Data for registering user"
 //
 //	@Success	201		"User was successfully registered"
 //	@Failure	400		{object}	response.Error	"Invalid request with detail"
@@ -74,7 +75,7 @@ func (u *UserController) Register(ctx *gin.Context) {
 		return
 	}
 
-	var req *request.RegisterUserRequest
+	var req *request.UserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		u.lg.WithError(err).Error("Failed to bind request")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -109,7 +110,7 @@ func (u *UserController) Register(ctx *gin.Context) {
 //	@Accepts	json
 //	@Produce	json
 //
-//	@Param		data	body	request.RegisterUserRequest	true	"Data for user login"
+//	@Param		data	body	request.UserRequest	true	"Data for user login"
 //
 //	@Success	201		"User successfully logged in"
 //	@Failure	400		{object}	response.Error	"Invalid request with detail"
@@ -130,7 +131,7 @@ func (u *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
-	var req *request.RegisterUserRequest
+	var req *request.UserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		u.lg.WithError(err).Error("Failed to bind request")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

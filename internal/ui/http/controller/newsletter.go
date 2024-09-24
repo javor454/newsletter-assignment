@@ -39,11 +39,9 @@ type NewsletterController struct {
 
 func NewNewsletterController(
 	lg logger.Logger,
-	httpServer *http_server.Server,
 	cnh CreateNewsletterHandler,
 	gnbui GetNewslettersByUserIDHandler,
 	gnbpih GetNewslettersByPublicIDHandler,
-	authMiddleware *middleware.AuthMiddleware,
 ) *NewsletterController {
 	controller := &NewsletterController{
 		createNewsletter:         cnh,
@@ -52,12 +50,18 @@ func NewNewsletterController(
 		getNewslettersByPublicID: gnbpih,
 	}
 
-	httpServer.GetEngine().POST("api/v1/newsletters", authMiddleware.Handle, controller.Create)
-	httpServer.GetEngine().GET("api/v1/newsletters", authMiddleware.Handle, controller.GetNewslettersByUserID)
-
-	httpServer.GetEngine().GET("api/v1/newsletters/:public_id", controller.GetNewsletterByPublicID)
-
 	return controller
+}
+
+func (u *NewsletterController) RegisterNewsletterController(
+	authMiddleware *middleware.AuthMiddleware,
+	httpServer *http_server.Server,
+) {
+	httpServer.GetEngine().POST("api/v1/newsletters", authMiddleware.Handle, u.Create)
+	httpServer.GetEngine().GET("api/v1/newsletters", authMiddleware.Handle, u.GetNewslettersByUserID)
+
+	httpServer.GetEngine().GET("api/v1/newsletters/:public_id", u.GetNewsletterByPublicID)
+
 }
 
 // Create

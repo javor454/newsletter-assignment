@@ -29,7 +29,7 @@ type AppConfig struct {
 	Host               string
 }
 
-func CreateAppConfig() (*AppConfig, error) {
+func NewAppConfig() (*AppConfig, error) {
 	httpPort := viper.GetInt(envHttpPort)
 	if httpPort == 0 {
 		return nil, getMissingError(envHttpPort)

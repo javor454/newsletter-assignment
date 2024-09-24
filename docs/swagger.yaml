@@ -11,7 +11,15 @@ definitions:
     required:
     - name
     type: object
-  request.RegisterUserRequest:
+  request.SubscribeToNewsletter:
+    properties:
+      email:
+        example: test@test.com
+        type: string
+    required:
+    - email
+    type: object
+  request.UserRequest:
     properties:
       email:
         example: test@test.com
@@ -22,14 +30,6 @@ definitions:
     required:
     - email
     - password
-    type: object
-  request.SubscribeToNewsletter:
-    properties:
-      email:
-        example: test@test.com
-        type: string
-    required:
-    - email
     type: object
   response.Error:
     properties:
@@ -347,7 +347,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/request.RegisterUserRequest'
+          $ref: '#/definitions/request.UserRequest'
       produces:
       - application/json
       responses:
@@ -374,7 +374,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/request.RegisterUserRequest'
+          $ref: '#/definitions/request.UserRequest'
       produces:
       - application/json
       responses:

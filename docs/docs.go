@@ -393,7 +393,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.RegisterUserRequest"
+                            "$ref": "#/definitions/request.UserRequest"
                         }
                     }
                 ],
@@ -435,7 +435,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.RegisterUserRequest"
+                            "$ref": "#/definitions/request.UserRequest"
                         }
                     }
                 ],
@@ -479,7 +479,19 @@ const docTemplate = `{
                 }
             }
         },
-        "request.RegisterUserRequest": {
+        "request.SubscribeToNewsletter": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "test@test.com"
+                }
+            }
+        },
+        "request.UserRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -493,18 +505,6 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "Pa$$W0rD"
-                }
-            }
-        },
-        "request.SubscribeToNewsletter": {
-            "type": "object",
-            "required": [
-                "email"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "test@test.com"
                 }
             }
         },

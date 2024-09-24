@@ -29,6 +29,10 @@ func LoggingMiddleware(lg logger.Logger, blacklist []string) gin.HandlerFunc {
 				panic("failed to read request body: " + err.Error())
 			}
 		}
+		requestHeaders := make(map[string]string)
+		for k, v := range c.Request.Header {
+			requestHeaders[k] = strings.Join(v, ", ")
+		}
 		// Restore the request body
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(requestBody))
 
@@ -38,9 +42,16 @@ func LoggingMiddleware(lg logger.Logger, blacklist []string) gin.HandlerFunc {
 
 		c.Next()
 
+		responseHeaders := make(map[string]string)
+		for k, v := range blw.Header() {
+			responseHeaders[k] = strings.Join(v, ", ")
+		}
+
 		duration := time.Since(start)
 		meta := map[string]interface{}{
-			"duration": duration.String(),
+			"duration":         duration.String(),
+			"request_headers":  requestHeaders,
+			"response_headers": responseHeaders,
 		}
 		if string(requestBody) != "" {
 			meta["request_body"] = string(requestBody)

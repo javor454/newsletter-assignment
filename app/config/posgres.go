@@ -7,22 +7,24 @@ import (
 )
 
 const (
-	envPgUser     = "CONFIG_POSTGRES_USER"
-	envPgPassword = "CONFIG_POSTGRES_PASSWORD"
-	envPgDb       = "CONFIG_POSTGRES_DB"
-	envPgHost     = "CONFIG_POSTGRES_HOST"
-	envPgPort     = "CONFIG_POSTGRES_PORT"
+	envPgUser          = "CONFIG_POSTGRES_USER"
+	envPgPassword      = "CONFIG_POSTGRES_PASSWORD"
+	envPgDb            = "CONFIG_POSTGRES_DB"
+	envPgHost          = "CONFIG_POSTGRES_HOST"
+	envPgPort          = "CONFIG_POSTGRES_PORT"
+	envPgMigrationsDir = "CONFIG_POSTGRES_MIGRATIONS_DIR"
 )
 
 type PostgresConfig struct {
-	User     string
-	Password string
-	Db       string
-	Host     string
-	Port     int
+	User          string
+	Password      string
+	Db            string
+	Host          string
+	Port          int
+	MigrationsDir string
 }
 
-func CreatePostgresConfig() (*PostgresConfig, error) {
+func NewPostgresConfig() (*PostgresConfig, error) {
 	user := viper.GetString(envPgUser)
 	if user == "" {
 		return nil, getMissingError(envPgUser)
@@ -43,13 +45,18 @@ func CreatePostgresConfig() (*PostgresConfig, error) {
 	if port == 0 {
 		return nil, getMissingError(envPgPort)
 	}
+	migrationsDir := viper.GetString(envPgMigrationsDir)
+	if migrationsDir == "" {
+		return nil, getMissingError(envPgMigrationsDir)
+	}
 
 	return &PostgresConfig{
-		User:     user,
-		Password: password,
-		Db:       db,
-		Host:     host,
-		Port:     port,
+		User:          user,
+		Password:      password,
+		Db:            db,
+		Host:          host,
+		Port:          port,
+		MigrationsDir: migrationsDir,
 	}, nil
 }
 

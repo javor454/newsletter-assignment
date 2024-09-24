@@ -136,10 +136,24 @@
 
 ## TODOS for PROD
 - system tests (func, unit, integration)
+  - user
+    - register
+      - success ✅
+      - fail
+    - login
+      - success ✅
+      - fail
+    - newsletter
+      - create newsletter success ✅
+      - get newsletters by userID ✅
+      - get newsletter by publicID
+    - subscription
+  - newsletter
+    - TODO
   - jwt token
     - expiration
     - malformed
-  - all happy paths + application errors
+  - unit config check
 - infrastructure
   - build binary
   - digital ocean VPS
@@ -168,6 +182,7 @@
 
 ## TODOS extras
 - basic performance test
+- create a wrapper around all packages
 - simple backoffice
 - replace GET http endpoints with one public and one private graphql
 - improve project structure

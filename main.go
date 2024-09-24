@@ -14,25 +14,25 @@ import (
 	"github.com/spf13/viper"
 )
 
-//	@title			Newsletter assignment
-//	@version		1.0
-//	@description	Newsletter assignment for STRV.
-//	@contact.email	javornicky.jiri@gmail.com
+// @title			Newsletter assignment
+// @version		1.0
+// @description	Newsletter assignment for STRV.
+// @contact.email	javornicky.jiri@gmail.com
 func main() {
 	shutdownHandler := shutdown.NewHandler()
 
 	rootCtx := shutdownHandler.CreateRootContextWithShutdown()
 
 	viper.AutomaticEnv()
-	appConfig, err := config.CreateAppConfig()
+	appConfig, err := config.NewAppConfig()
 	if err != nil {
 		panic("[CONFIG] failed to load: " + err.Error())
 	}
-	pgConfig, err := config.CreatePostgresConfig()
+	pgConfig, err := config.NewPostgresConfig()
 	if err != nil {
 		panic("[CONFIG] failed to load: " + err.Error())
 	}
-	fbConfig, err := config.CreateFirebaseConfig()
+	fbConfig, err := config.NewFirebaseConfig()
 	if err != nil {
 		panic("[CONFIG] failed to load: " + err.Error())
 	}
@@ -60,7 +60,7 @@ func main() {
 		panic("[SENDGRID] failed to create client: " + err.Error())
 	}
 
-	if err := pg.MigrationsUp(lg, pgConn); err != nil {
+	if err := pg.MigrationsUp(lg, pgConfig, pgConn); err != nil {
 		panic("[MIGRATIONS] failed to run: " + err.Error())
 	}
 

@@ -70,8 +70,12 @@ func RegisterDependencies(
 
 	am := middleware.NewAuthMiddleware(dth, lg)
 
-	controller.NewHealthController(lg, httpServer, hm)
-	controller.NewUserController(lg, httpServer, ruh, luh)
-	controller.NewNewsletterController(lg, httpServer, cnh, gnbuih, gnbpih, am)
-	controller.NewSubscriptionController(lg, httpServer, gnbseh, stnh, uh)
+	hc := controller.NewHealthController(lg, hm)
+	hc.RegisterHealhController(httpServer)
+	uc := controller.NewUserController(lg, ruh, luh)
+	uc.RegisterUserController(httpServer)
+	nc := controller.NewNewsletterController(lg, cnh, gnbuih, gnbpih)
+	nc.RegisterNewsletterController(am, httpServer)
+	sco := controller.NewSubscriptionController(lg, gnbseh, stnh, uh)
+	sco.RegisterSubscriptionController(httpServer)
 }

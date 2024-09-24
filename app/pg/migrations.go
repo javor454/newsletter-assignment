@@ -5,15 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // This import is crucial
+	"github.com/javor454/newsletter-assignment/app/config"
 	"github.com/javor454/newsletter-assignment/app/logger"
 )
 
-func MigrationsUp(lg logger.Logger, pgConn *sql.DB) error {
+func MigrationsUp(lg logger.Logger, pgConf *config.PostgresConfig, pgConn *sql.DB) error {
 	lg.Debug("[MIGRATIONS] Starting up...")
 
 	driver, err := postgres.WithInstance(pgConn, &postgres.Config{})
@@ -21,19 +21,12 @@ func MigrationsUp(lg logger.Logger, pgConn *sql.DB) error {
 		return fmt.Errorf("failed to create database driver: %w", err)
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get current working directory: %w", err)
-	}
-
-	migrationsPath := filepath.Join(cwd, "migration")
-
-	if _, err := os.Stat(migrationsPath); os.IsNotExist(err) {
-		return fmt.Errorf("migrations directory does not exist: %s", migrationsPath)
+	if _, err := os.Stat(pgConf.MigrationsDir); os.IsNotExist(err) {
+		return fmt.Errorf("migrations directory does not exist: %s", pgConf.MigrationsDir)
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", migrationsPath),
+		fmt.Sprintf("file://%s", pgConf.MigrationsDir),
 		"postgres", driver)
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)

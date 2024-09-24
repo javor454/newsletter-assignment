@@ -17,14 +17,16 @@ type HealthController struct {
 
 func NewHealthController(
 	lg logger.Logger,
-	httpServer *http_server.Server,
 	hm *healthcheck.HealthMonitor,
 ) *HealthController {
 	controller := &HealthController{lg: lg, healthMonitor: hm}
-	httpServer.GetEngine().GET("api/health/liveness", controller.Liveness)
-	httpServer.GetEngine().GET("api/health/readiness", controller.Readiness)
 
 	return controller
+}
+
+func (h *HealthController) RegisterHealhController(httpServer *http_server.Server) {
+	httpServer.GetEngine().GET("api/health/liveness", h.Liveness)
+	httpServer.GetEngine().GET("api/health/readiness", h.Readiness)
 }
 
 // Liveness
@@ -34,7 +36,7 @@ func NewHealthController(
 //	@Tags		health
 //
 //	@Success	200
-func (c *HealthController) Liveness(ctx *gin.Context) {
+func (h *HealthController) Liveness(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{})
 }
 
@@ -46,13 +48,13 @@ func (c *HealthController) Liveness(ctx *gin.Context) {
 //	@Produce	json
 //
 //	@Success	200	{object}	response.HealthStatus
-func (c *HealthController) Readiness(ctx *gin.Context) {
+func (h *HealthController) Readiness(ctx *gin.Context) {
 	const (
 		healthy   = "healthy"
 		unhealthy = "unhealthy"
 	)
 
-	statuses := c.healthMonitor.GetStatus()
+	statuses := h.healthMonitor.GetStatus()
 
 	code := http.StatusOK
 	overallStatus := healthy

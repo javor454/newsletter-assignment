@@ -18,7 +18,7 @@ type FirebaseConfig struct {
 	ServiceAccountFilePath string
 }
 
-func CreateFirebaseConfig() (*FirebaseConfig, error) {
+func NewFirebaseConfig() (*FirebaseConfig, error) {
 	emulatorHost := viper.GetString(envFirebaseEmulatorHost)
 	if emulatorHost == "" {
 		return nil, getMissingError(envFirebaseEmulatorHost)

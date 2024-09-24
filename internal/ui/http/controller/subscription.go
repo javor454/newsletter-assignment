@@ -38,7 +38,6 @@ type SubscriptionController struct {
 
 func NewSubscriptionController(
 	lg logger.Logger,
-	httpServer *http_server.Server,
 	gsnbeh GetNewslettersBySubscriptionEmailHandler,
 	stnh SubscribeToNewsletterHandler,
 	unh UnsubscribeNewsletterHandler,
@@ -50,19 +49,21 @@ func NewSubscriptionController(
 		subscribeToNewsletter:                    stnh,
 	}
 
-	httpServer.GetEngine().GET("api/v1/subscriptions/:email/newsletters", controller.GetNewslettersBySubscriptionEmail)
+	return controller
+}
+
+func (u *SubscriptionController) RegisterSubscriptionController(httpServer *http_server.Server) {
+	httpServer.GetEngine().GET("api/v1/subscriptions/:email/newsletters", u.GetNewslettersBySubscriptionEmail)
 	httpServer.GetEngine().POST(
 		"api/v1/newsletters/:newsletter_public_id/subscriptions",
-		controller.SubscribeToNewsletter,
+		u.SubscribeToNewsletter,
 	)
 	// use GET to hack unsubscribing via link
 	// TODO: prepare version which adheres to REST principles
 	httpServer.GetEngine().GET(
 		"api/v1/unsubscribe",
-		controller.UnsubscribeNewsletter,
+		u.UnsubscribeNewsletter,
 	)
-
-	return controller
 }
 
 // GetNewslettersBySubscriptionEmail
