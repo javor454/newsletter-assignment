@@ -67,7 +67,7 @@ func (s *UserTestSuite) SetupSuite() {
 	luh := handler.NewLoginUserHandler(ur, tm)
 
 	s.c = controller.NewUserController(s.lg, ruh, luh)
-	s.userIDs = make([]string, 0, 2)
+	s.userIDs = make([]string, 0, 10)
 }
 
 func (s *UserTestSuite) Test_RegisterUser_Success() {

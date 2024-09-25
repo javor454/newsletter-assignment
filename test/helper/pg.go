@@ -147,3 +147,66 @@ func RemoveNewsletterByID(ids []string, pgConn *sql.DB) error {
 
 	return nil
 }
+
+func RemoveSubscriptionsByID(ids []string, pgConn *sql.DB) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	const query = "DELETE FROM subscriptions WHERE id = ANY($1);"
+	_, err := pgConn.ExecContext(ctx, query, pq.Array(ids))
+	if err != nil {
+		return fmt.Errorf("failed to remove subscriptions: %w", err)
+	}
+
+	return nil
+}
+
+type SubscriptionRow struct {
+	ID              string     `json:"id"`
+	SubscriberEmail string     `json:"subscriber_email"`
+	NewsletterID    string     `json:"newsletter_id"`
+	CreatedAt       time.Time  `json:"created_at"`
+	DisabledAt      *time.Time `json:"disabled_at"`
+	Token           string     `json:"token"`
+}
+
+func GetSubscriptionByNewsletterID(newsletterID string, pgConn *sql.DB) ([]*SubscriptionRow, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	const query = `
+		SELECT id, subscriber_email, newsletter_id, created_at, disabled_at, token
+		FROM subscriptions WHERE newsletter_id = $1;
+	`
+
+	rows, err := pgConn.QueryContext(ctx, query, newsletterID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subscriptions: %w", err)
+	}
+
+	subscriptions := make([]*SubscriptionRow, 0, 10)
+	for rows.Next() {
+		var row SubscriptionRow
+		if err := rows.Scan(
+			&row.ID,
+			&row.SubscriberEmail,
+			&row.NewsletterID,
+			&row.CreatedAt,
+			&row.DisabledAt,
+			&row.Token,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan subscriptions: %w", err)
+		}
+
+		subscriptions = append(subscriptions, &row)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("get subscriptions by newsletter id operation failed: %w", err)
+	}
+
+	return subscriptions, nil
+}

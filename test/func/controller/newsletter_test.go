@@ -94,7 +94,7 @@ func (s *NewsletterTestSuite) SetupSuite() {
 	s.am = middleware.NewAuthMiddleware(dth, s.lg)
 
 	s.c = controller.NewNewsletterController(s.lg, cnh, gnbuih, gnbpih)
-	s.userIDs = make([]string, 0, 2)
+	s.userIDs = make([]string, 0, 10)
 	s.newsletterIDs = make([]string, 0, 10)
 }
 
@@ -291,13 +291,7 @@ func (s *NewsletterTestSuite) Test_GetNewsletterByPublicID_Success() {
 		newsletterDescription = "description 3"
 	)
 
-	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-
-	queryParams := url.Values{}
-	queryParams.Add("page_number", "1")
-	queryParams.Add("page_size", "10")
-
+	// fixtures
 	userID := uuid.New().String()
 	hash, err := helper.Encrypt(password)
 	if err != nil {
@@ -325,6 +319,14 @@ func (s *NewsletterTestSuite) Test_GetNewsletterByPublicID_Success() {
 	afterCreate := time.Now()
 
 	s.newsletterIDs = append(s.newsletterIDs, newsletterID)
+
+	// setup
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	queryParams := url.Values{}
+	queryParams.Add("page_number", "1")
+	queryParams.Add("page_size", "10")
 
 	fullURL := fmt.Sprintf("%s/%s?%s", uri, newsletterPublicID, queryParams.Encode())
 

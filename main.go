@@ -56,9 +56,6 @@ func main() {
 	}
 
 	mailClient := sendgrid.NewClient(lg, appConfig)
-	if err != nil {
-		panic("[SENDGRID] failed to create client: " + err.Error())
-	}
 
 	if err := pg.MigrationsUp(lg, pgConfig, pgConn); err != nil {
 		panic("[MIGRATIONS] failed to run: " + err.Error())

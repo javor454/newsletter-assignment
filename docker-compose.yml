@@ -39,6 +39,7 @@ services:
 
             # Sendgrid
             CONFIG_SENDGRID_API_KEY: ${CONFIG_SENDGRID_API_KEY}
+            CONFIG_SENDGRID_TEMPLATE_DIR: "/go/src/newsletter-assignment/template"
             CONFIG_SEND_MAIL: "false"
 
             # Logger

@@ -26,6 +26,7 @@ func Test_AppConfig_Success(t *testing.T) {
 	assert.Equal(t, []string{"authorization", "content-type"}, cf.CorsAllowedHeaders)
 	assert.Equal(t, "Europe/Prague", cf.Timezone)
 	assert.Equal(t, "sendgrid-api-key", cf.SendGridApiKey)
+	assert.Equal(t, "sendgrid-template-dir", cf.SendGridTemplateDir)
 	assert.Equal(t, true, cf.SendMail)
 }
 
@@ -99,6 +100,12 @@ func Test_AppConfig_Fail(t *testing.T) {
 				viper.Set("CONFIG_SENDGRID_API_KEY", "")
 			},
 			expectedErrMsg: "missing required environment variable: CONFIG_SENDGRID_API_KEY",
+		},
+		"sendgrid_template_dir_empty": {
+			envSetFn: func() {
+				viper.Set("CONFIG_SENDGRID_TEMPLATE_DIR", "")
+			},
+			expectedErrMsg: "missing required environment variable: CONFIG_SENDGRID_TEMPLATE_DIR",
 		},
 		"host_empty": {
 			envSetFn: func() {
@@ -217,6 +224,7 @@ func initAppEnvVars() {
 	viper.Set("CONFIG_CORS_ALLOWED_HEADERS", "authorization content-type")
 	viper.Set("CONFIG_TIMEZONE", "Europe/Prague")
 	viper.Set("CONFIG_SENDGRID_API_KEY", "sendgrid-api-key")
+	viper.Set("CONFIG_SENDGRID_TEMPLATE_DIR", "sendgrid-template-dir")
 	viper.Set("CONFIG_SEND_MAIL", "true")
 	viper.Set("CONFIG_HOST", "http://localhost")
 }

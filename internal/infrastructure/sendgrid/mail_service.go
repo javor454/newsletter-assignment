@@ -33,7 +33,7 @@ func NewMailService(lg logger.Logger, conf *config.AppConfig, client *sendgrid.C
 		templates: make(map[string]*template.Template),
 	}
 
-	if err := m.loadTemplates("template"); err != nil {
+	if err := m.loadTemplates(conf.SendGridTemplateDir); err != nil {
 		panic("failed to load templates: " + err.Error())
 	}
 	lg.Info("[EMAIL] Service initialized, templates loaded")
@@ -109,5 +109,4 @@ func (m *MailService) loadTemplates(dir string) error {
 
 		return nil
 	})
-
 }

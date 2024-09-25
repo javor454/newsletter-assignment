@@ -8,3 +8,8 @@ type CreateNewsletterRequest struct {
 type SubscribeToNewsletter struct {
 	Email string `json:"email" binding:"required" example:"test@test.com"`
 }
+
+type UserRequest struct {
+	Email    string `json:"email" binding:"required" example:"test@test.com"`
+	Password string `json:"password" binding:"required" example:"Pa$$W0rD"`
+}
