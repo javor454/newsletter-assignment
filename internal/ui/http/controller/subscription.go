@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -150,7 +149,7 @@ func (u *SubscriptionController) GetNewslettersBySubscriptionEmail(ctx *gin.Cont
 		mapped = append(mapped, response.CreatePublicNewsletterResponseFromEntity(n))
 	}
 
-	ctx.JSON(http.StatusOK, response.PaginatedResponse{
+	ctx.JSON(http.StatusOK, response.PaginatedResponse[[]*response.PublicNewsletter]{
 		Data: mapped,
 		Pagination: response.Pagination{
 			CurrentPage: pagination.CurrentPage,
@@ -250,7 +249,6 @@ func (u *SubscriptionController) SubscribeToNewsletter(ctx *gin.Context) {
 //	@Failure	500						"Unexpected exception"
 func (u *SubscriptionController) UnsubscribeNewsletter(ctx *gin.Context) {
 	newsletterID := ctx.Query("newsletter_public_id")
-	fmt.Println(newsletterID)
 	if newsletterID == "" {
 		u.lg.Error("Invalid newsletter_id query parameter")
 		ctx.JSON(http.StatusBadRequest, gin.H{})

@@ -1,7 +1,7 @@
 package controller
 
-type PaginatedResponse struct {
-	Data       any        `json:"data"`
+type PaginatedResponse[T any] struct {
+	Data       T          `json:"data"`
 	Pagination Pagination `json:"pagination"`
 }
 

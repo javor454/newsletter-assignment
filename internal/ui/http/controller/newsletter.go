@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/javor454/newsletter-assignment/app/http_server"
@@ -26,28 +25,28 @@ type GetNewslettersByUserIDHandler interface {
 	Handle(ctx context.Context, userID string, pageSize, pageNumber int) ([]*domain.Newsletter, *dto.Pagination, error)
 }
 
-type GetNewslettersByPublicIDHandler interface {
+type GetNewsletterByPublicIDHandler interface {
 	Handle(ctx context.Context, publicID string) (*domain.Newsletter, error)
 }
 
 type NewsletterController struct {
-	lg                       logger.Logger
-	createNewsletter         CreateNewsletterHandler
-	getNewslettersByUserID   GetNewslettersByUserIDHandler
-	getNewslettersByPublicID GetNewslettersByPublicIDHandler
+	lg                      logger.Logger
+	createNewsletter        CreateNewsletterHandler
+	getNewslettersByUserID  GetNewslettersByUserIDHandler
+	getNewsletterByPublicID GetNewsletterByPublicIDHandler
 }
 
 func NewNewsletterController(
 	lg logger.Logger,
 	cnh CreateNewsletterHandler,
 	gnbui GetNewslettersByUserIDHandler,
-	gnbpih GetNewslettersByPublicIDHandler,
+	gnbpih GetNewsletterByPublicIDHandler,
 ) *NewsletterController {
 	controller := &NewsletterController{
-		createNewsletter:         cnh,
-		getNewslettersByUserID:   gnbui,
-		lg:                       lg,
-		getNewslettersByPublicID: gnbpih,
+		createNewsletter:        cnh,
+		getNewslettersByUserID:  gnbui,
+		lg:                      lg,
+		getNewsletterByPublicID: gnbpih,
 	}
 
 	return controller
@@ -61,7 +60,6 @@ func (u *NewsletterController) RegisterNewsletterController(
 	httpServer.GetEngine().GET("api/v1/newsletters", authMiddleware.Handle, u.GetNewslettersByUserID)
 
 	httpServer.GetEngine().GET("api/v1/newsletters/:public_id", u.GetNewsletterByPublicID)
-
 }
 
 // Create
@@ -217,7 +215,7 @@ func (u *NewsletterController) GetNewslettersByUserID(ctx *gin.Context) {
 		mapped = append(mapped, response.CreateInternalNewsletterResponseFromEntity(n))
 	}
 
-	ctx.JSON(http.StatusOK, response.PaginatedResponse{
+	ctx.JSON(http.StatusOK, response.PaginatedResponse[[]*response.InternalNewsletter]{
 		Data: mapped,
 		Pagination: response.Pagination{
 			CurrentPage: pagination.CurrentPage,
@@ -267,7 +265,7 @@ func (u *NewsletterController) GetNewsletterByPublicID(ctx *gin.Context) {
 		return
 	}
 
-	newsletter, err := u.getNewslettersByPublicID.Handle(ctx, publicID)
+	newsletter, err := u.getNewsletterByPublicID.Handle(ctx, publicID)
 	if err != nil {
 		code, body := func(err error) (int, gin.H) {
 			if errors.Is(err, application.InvalidUUIDError) {
@@ -282,10 +280,5 @@ func (u *NewsletterController) GetNewsletterByPublicID(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response.PublicNewsletter{
-		PublicID:    newsletter.PublicID().String(),
-		Name:        newsletter.Name(),
-		Description: newsletter.Description(),
-		CreatedAt:   newsletter.CreatedAt().Format(time.RFC3339),
-	})
+	ctx.JSON(http.StatusOK, response.CreatePublicNewsletterResponseFromEntity(newsletter))
 }

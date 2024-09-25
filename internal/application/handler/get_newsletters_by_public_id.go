@@ -10,15 +10,15 @@ type GetNewsletterByPublicID interface {
 	GetByPublicID(ctx context.Context, publicID *domain.ID) (*domain.Newsletter, error)
 }
 
-type GetNewslettersByPublicIDHandler struct {
+type GetNewsletterByPublicIDHandler struct {
 	getNewsletterByPublicID GetNewsletterByPublicID
 }
 
-func NewGetNewslettersByPublicIDHandler(gnbpi GetNewsletterByPublicID) *GetNewslettersByPublicIDHandler {
-	return &GetNewslettersByPublicIDHandler{getNewsletterByPublicID: gnbpi}
+func NewGetNewsletterByPublicIDHandler(gnbpi GetNewsletterByPublicID) *GetNewsletterByPublicIDHandler {
+	return &GetNewsletterByPublicIDHandler{getNewsletterByPublicID: gnbpi}
 }
 
-func (g *GetNewslettersByPublicIDHandler) Handle(ctx context.Context, publicID string) (*domain.Newsletter, error) {
+func (g *GetNewsletterByPublicIDHandler) Handle(ctx context.Context, publicID string) (*domain.Newsletter, error) {
 	id, err := domain.CreateIDFromExisting(publicID)
 	if err != nil {
 		return nil, err

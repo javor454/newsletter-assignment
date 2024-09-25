@@ -20,6 +20,6 @@ func CreateInternalNewsletterResponseFromEntity(n *domain.Newsletter) *InternalN
 		PublicID:    n.PublicID().String(),
 		Name:        n.Name(),
 		Description: n.Description(),
-		CreatedAt:   n.CreatedAt().Format(time.RFC3339),
+		CreatedAt:   n.CreatedAt().Format(time.RFC3339Nano),
 	}
 }

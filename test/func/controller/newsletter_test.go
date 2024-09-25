@@ -45,11 +45,18 @@ type newsletterRequest struct {
 }
 
 type getNewsletterByUserIDResponse struct {
-	ID          string  `json:"id"`
-	PublicID    string  `json:"public_id"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	CreatedAt   string  `json:"created_at"`
+	ID          string    `json:"id"`
+	PublicID    string    `json:"public_id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type getNewsletterByPublicIDResponse struct {
+	PublicID    string    `json:"public_id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 func (s *NewsletterTestSuite) SetupSuite() {
@@ -82,7 +89,7 @@ func (s *NewsletterTestSuite) SetupSuite() {
 	dth := handler.NewDecodeTokenHandler(tm)
 	cnh := handler.NewCreateNewsletterHandler(gnbpi)
 	gnbuih := handler.NewGetNewslettersByUserIDHandler(gnbpi)
-	gnbpih := handler.NewGetNewslettersByPublicIDHandler(gnbpi)
+	gnbpih := handler.NewGetNewsletterByPublicIDHandler(gnbpi)
 
 	s.am = middleware.NewAuthMiddleware(dth, s.lg)
 
@@ -204,12 +211,12 @@ func (s *NewsletterTestSuite) Test_GetNewsletterByUserID_Success() {
 	s.userIDs = append(s.userIDs, userID)
 
 	newsletterID := uuid.New().String()
-	publicID := uuid.New().String()
+	newsletterPublicID := uuid.New().String()
 
 	beforeCreate := time.Now()
 	if err := helper.CreateNewsletter(
 		newsletterID,
-		publicID,
+		newsletterPublicID,
 		userID,
 		newsletterName,
 		newsletterDescription,
@@ -248,7 +255,7 @@ func (s *NewsletterTestSuite) Test_GetNewsletterByUserID_Success() {
 		s.T().Fatalf("invalid status code: %d", res.StatusCode)
 	}
 
-	var body controllertest.PaginatedResponse
+	var body controllertest.PaginatedResponse[[]getNewsletterByUserIDResponse]
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		s.T().Fatalf("reading body error %s", err.Error())
@@ -264,13 +271,115 @@ func (s *NewsletterTestSuite) Test_GetNewsletterByUserID_Success() {
 		s.T().Fatalf("error unmarshalling body: %s", err.Error())
 	}
 
-	fmt.Println("body", body, "xxx")
-	fmt.Println("data", body.Data, "xxx")
-	// TODO: map
-	fmt.Println(beforeCreate, afterCreate)
-	// s.Equal(newsletterName, newsletterRow[0].Name, "newsletter name mismatch")
-	// s.Equal(newsletterDescription, newsletterRow[0].Description, "newsletter description mismatch")
-	// s.True(newsletterRow[0].CreatedAt.After(beforeCreate) && newsletterRow[0].CreatedAt.Before(afterCreate), "invalid creation time")
+	if len(body.Data) != 1 {
+		s.T().Fatalf("invalid number of saved newsletters")
+	}
+
+	s.Equal(newsletterID, body.Data[0].ID, "newsletter id mismatch")
+	s.Equal(newsletterPublicID, body.Data[0].PublicID, "newsletter public id mismatch")
+	s.Equal(newsletterName, body.Data[0].Name, "newsletter name mismatch")
+	s.Equal(newsletterDescription, *body.Data[0].Description, "newsletter description mismatch")
+	s.True(body.Data[0].CreatedAt.After(beforeCreate) && body.Data[0].CreatedAt.Before(afterCreate), "invalid creation time")
+}
+
+func (s *NewsletterTestSuite) Test_GetNewsletterByPublicID_Success() {
+	const (
+		email                 = "test5@test.com"
+		password              = "P@$$w0rD"
+		uri                   = "/api/v1/newsletters"
+		newsletterName        = "success newsletter 3"
+		newsletterDescription = "description 3"
+	)
+
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+
+	queryParams := url.Values{}
+	queryParams.Add("page_number", "1")
+	queryParams.Add("page_size", "10")
+
+	userID := uuid.New().String()
+	hash, err := helper.Encrypt(password)
+	if err != nil {
+		s.T().Fatalf("encrypt error %s", err.Error())
+	}
+	if err := helper.CreateUser(userID, email, hash, s.pgConn); err != nil {
+		s.T().Fatalf("create user error %s", err.Error())
+	}
+	s.userIDs = append(s.userIDs, userID)
+
+	newsletterID := uuid.New().String()
+	newsletterPublicID := uuid.New().String()
+
+	beforeCreate := time.Now()
+	if err := helper.CreateNewsletter(
+		newsletterID,
+		newsletterPublicID,
+		userID,
+		newsletterName,
+		newsletterDescription,
+		s.pgConn,
+	); err != nil {
+		s.T().Fatalf("creating newsletter error %s", err.Error())
+	}
+	afterCreate := time.Now()
+
+	s.newsletterIDs = append(s.newsletterIDs, newsletterID)
+
+	fullURL := fmt.Sprintf("%s/%s?%s", uri, newsletterPublicID, queryParams.Encode())
+
+	r, err := http.NewRequest(http.MethodGet, fullURL, nil)
+	if err != nil {
+		s.T().Fatalf("error creating request: %s", err.Error())
+	}
+
+	token, err := helper.GenerateJWT(userID, s.appConf.JwtSecret, 5*time.Minute)
+	if err != nil {
+		s.T().Fatalf("generating jwt error %s", err.Error())
+	}
+
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	ctx, engine := gin.CreateTestContext(w)
+
+	ctx.Request = r
+
+	engine.Handle(
+		http.MethodGet,
+		fmt.Sprintf("%s/%s", uri, ":public_id"),
+		s.am.Handle,
+		middleware.LoggingMiddleware(s.lg, []string{}),
+		s.c.GetNewsletterByPublicID,
+	)
+	engine.HandleContext(ctx)
+
+	res := w.Result()
+
+	if res.StatusCode != http.StatusOK {
+		s.T().Fatalf("invalid status code: %d", res.StatusCode)
+	}
+
+	var body getNewsletterByPublicIDResponse
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		s.T().Fatalf("reading body error %s", err.Error())
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			s.T().Fatalf("closing body error %s", err.Error())
+		}
+	}(res.Body)
+
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		s.T().Fatalf("error unmarshalling body: %s", err.Error())
+	}
+
+	s.Equal(newsletterPublicID, body.PublicID, "newsletter public id mismatch")
+	s.Equal(newsletterName, body.Name, "newsletter name mismatch")
+	s.Equal(newsletterDescription, *body.Description, "newsletter description mismatch")
+	s.True(body.CreatedAt.After(beforeCreate) && body.CreatedAt.Before(afterCreate), "invalid creation time")
 }
 
 func (s *NewsletterTestSuite) TearDownSuite() {

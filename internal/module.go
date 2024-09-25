@@ -66,7 +66,7 @@ func RegisterDependencies(
 	uh := handler.NewUnsubscribeNewsletterHandler(sr, tm, sc)
 	pejh := handler.NewProcessEmailJobsHandler(lg, sr)
 	pejh.Handle(ctx)
-	gnbpih := handler.NewGetNewslettersByPublicIDHandler(nr)
+	gnbpih := handler.NewGetNewsletterByPublicIDHandler(nr)
 
 	am := middleware.NewAuthMiddleware(dth, lg)
 
